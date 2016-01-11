@@ -47,8 +47,20 @@ $(function() { // executed after the html content is loaded completely
 	d3_p.exit().remove();
 	
 	// Here begins the visualization code!
-	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", function(instances) {
-		console.log(instances);
+	
+	// define the function to parse cvs attributes
+	function d3_type(instance) {
+		for (var attribute in instance) {
+			instance[attribute] = parseFloat(instance[attribute]);			
+		}
+		return instance;
+	}
+	
+	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", d3_type, function(instances) {
+		// console.log(instances);
+		instances.forEach(function(instance) {
+			// console.log(instance);
+		});
 	});
 	
 	
