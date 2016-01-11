@@ -43,21 +43,10 @@
 	    </div>
 	    <!-- Content -->
 	    <div id="content" class="container">
-	    	<div id="gameCanvas">
-				<p>This is a testing element!</p>
-				<svg width = "100%" height = "600px">
-					<!--group-->
-					<g transform = "translate(50, 50)">
-						<text x = "20" y = "10" style = "font-size:2em; fill: red; stroke: black; stroke-width: 2px;">SVG Learning</text>
-						<rect x = "100" y = "100" width = "100" height = "100" fill = "none" stroke = "red" stroke-width = "10px" rx = "10" ry = "10"></rect>
-						<circle cx = "150px" cy = "150px" r = "50px" fill = "#9370DB" stroke = "rgba(0, 0, 255, 0.8)"></circle>
-						<line x1 = "100px" y1 = "100px" x2 = "200px" y2 = "200px" stroke = "black" stroke-width = "15px"></line>
-						<line x1 = "200px" y1 = "100px" x2 = "100px" y2 = "200px" stroke = "black" stroke-width = "15px"></line>
-						<!--M move to, L line to-->
-						<path d = "M50 50 L50 250 M250 250 L250 50" fill = "none" stroke = "yellow" stroke-width = "15px"></path>
-						<!--Z close the path-->
-						<path d = "M25 25 L25 275 L275 275 L275 25Z" fill = "none" stroke = "yellow" stroke-width = "15px"></path>
-					</g>
+	    	<div id="canvas">
+				<svg width = "1000px" height = "600px">
+					<!--group, contains the visualized charts-->
+					<g></g>
 				</svg>
 			</div>
   		<div id="push"></div>
