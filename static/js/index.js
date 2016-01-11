@@ -20,20 +20,7 @@ $(function() { // executed after the html content is loaded completely
 	var $arrayWithNamesExample = {"Sister 1":"Jing Li", "Sister 2":"Xinye Fu", "Me":"Dalei Li"};
 	console.log($arrayWithNamesExample["Sister 1"] + ", " + $arrayWithNamesExample["Sister 2"] + ", " + $arrayWithNamesExample["Me"] + ".");
 	
-	// D3 basics
-	// Update…
-	var d3_p = d3.select("#gameCanvas").selectAll("p")
-    .data([30, 42, 30, 23])
-    .style("font-size", function(d) { return d + "px"; });
-	
-	// Enter…
-	d3_p.enter().append("p").style("font-size", function(d) { return d + "px"; });
-
-	// Exit…
-	d3_p.exit().remove();
-	
-	// Here begins the game!
-	// declare a function, function is the first class object in JS
+		// declare a function, function is the first class object in JS
 	function square(x) {
 		return x * x;
 	}
@@ -41,14 +28,27 @@ $(function() { // executed after the html content is loaded completely
 	var _square = function(x) {
 		return x * x;
 	};
-	/**
-	* functional forEach	
-	*/
-	// First define an array
+	// functional forEach, First define an array
 	var arrayOfNumbers = [4, 5, 8, 9, 45];
 	arrayOfNumbers.forEach(function(d) {
 		console.log(d);
-		
+	});
+	
+	// D3 basics
+	// Update…
+	var d3_p = d3.select("#gameCanvas").selectAll("p")
+    .data([30, 25])
+    .style("font-size", function(d) { return d + "px"; });
+	
+	// Enter…
+	d3_p.enter().append("p").text("This is a test!").style("font-size", function(d) { return d + "px"; });
+
+	// Exit…
+	d3_p.exit().remove();
+	
+	// Here begins the visualization code!
+	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", function(instances) {
+		console.log(instances);
 	});
 	
 	
