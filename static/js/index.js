@@ -38,13 +38,17 @@ $(function() { // executed after the html content is loaded completely
 			height = innerHeight - padding.top - padding.bottom;
 		
 		// set visible area, i.e., the container of visualized charts
-		var d3_svg_g = d3_svg.select("g").attr({"transform": "translate(" + margin.left + "," + margin.top + ")"});
+		var d3_svg_g = d3_svg.select("g").attr({"transform": "translate(" + (margin.left + padding.left) + "," + (margin.top + padding.top) + ")"});
 		
 		var attributes = Object.keys(instances[0]);
 		// alcohol (0) and pH (6) to predict quality (7)
 		var xAttr = "alcohol", yAttr = "pH", zAttr = "quality";
 		var rMin = 2, rMax = 20; // "r" stands for radius
-		
+		// define axis labels
+		var xAxisLabelText = xAttr;
+		var xAxisLabelOffset = 48;
+		var yAxisLabelText = yAttr;
+		var yAxisLabelOffset = 36;
 		// map original data to svg visible area, width and height, respectively
 		var xLinearScale = d3.scale.linear().range([0, width]); // Pixel space
 		var yLinearScale = d3.scale.linear().range([height, 0]);
@@ -69,10 +73,12 @@ $(function() { // executed after the html content is loaded completely
 			d3_svg_g_circles.transition().duration(300)
 				.attr({"fill": function(instance){return zColorScale(instance[zAttr]);}, "fill-opacity": 0.8, "stroke": "none", "stroke-width": 4, "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": function(instance){return 5;}});
 			
-			// update axis
+			// update axis scale and labels
 			d3_svg_g.select(".xaxis").attr({"transform": "translate(0," + height + ")"})
-			.transition().duration(150).ease("sin-in-out").call(xAxis);
-			d3_svg_g.select(".yaxis").transition().duration(150).ease("sin-in-out").call(yAxis);
+				.transition().duration(150).ease("sin-in-out").call(xAxis)
+				.select(".label").attr({"x": width / 2});
+			d3_svg_g.select(".yaxis").transition().duration(150).ease("sin-in-out").call(yAxis)
+				.select(".label").attr({"y": height / 2});
 		}
 		else { // first time rendering
 			// set axis, give it a class so it can be used
@@ -80,6 +86,14 @@ $(function() { // executed after the html content is loaded completely
 			var xAxisG = d3_svg_g.append("g")
 				.attr({"transform": "translate(0," + height + ")", "class": "xaxis"});
 			var yAxisG = d3_svg_g.append("g").attr({"class": "yaxis"});		
+			var xAxisLabel = xAxisG.append("text")
+				.style("text-anchor", "middle")
+				.attr({"x": width / 2, "y": xAxisLabelOffset, "class": "label"}).style("font-size", "2em")
+				.text(xAxisLabelText);
+			var yAxisLabel = yAxisG.append("text")
+				.style("text-anchor", "middle")
+				.attr("transform", "translate(-" + yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)").style("font-size", "2em")
+				.text(yAxisLabelText);
 			// draw axis
 			xAxisG.call(xAxis);
 			yAxisG.call(yAxis);
@@ -96,11 +110,10 @@ $(function() { // executed after the html content is loaded completely
 			d3_svg_g_circles.transition().duration(300)
 				.attr({"fill": function(instance){return zColorScale(instance[zAttr]);}, "fill-opacity": 0.8, "stroke": "none", "stroke-width": 4, "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[zAttr]);}, "r": 5});
 		}
-		*/
 		// Enter handles added data only
 		d3_svg_g_circles.enter().append("circle")
 			.attr({"fill": function(instance){return zColorScale(instance[zAttr]);}, "fill-opacity": 0.8, "stroke": "none", "stroke-width": 4, "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[zAttr]);}, "r": 5});
-		
+		*/
 		// Exit…
 		d3_svg_g_circles.exit().remove();
 		
