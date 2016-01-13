@@ -188,7 +188,10 @@ $(function() { // executed after the HTML content is loaded completely
 	}
 	
 	// read CVS files
-	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", d3_type, function(instances) {
+	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", d3_type, function(error, instances) {
+		if (error){
+			throw error;
+		}
 		window.whiteWineInstances = instances;
 		render(window.whiteWineInstances, false);
 	});
