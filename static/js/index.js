@@ -523,8 +523,6 @@ $(function() { // executed after the HTML content is loaded completely
 		*/
 	}
     
-    
-    
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter
 	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", d3_type, function(error, instances) {
 		if (error){

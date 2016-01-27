@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang = "en">
+  <head>
+	<meta charset = "utf-8">
+	<meta http-equiv = "X-UA-Compatible" content="IE=edge">
+	<title>Wine Visulization</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="/static/themes/bootstrap.min.css">    
+    <link rel="stylesheet" href="/static/themes/jquery-ui.min.css">
+	<link rel="stylesheet" href="/static/themes/index.css">
+  </head>
+  <body>
+  	<!-- Part 1: Wrap all page content here -->
+  	<div id="wrapper">
+	  	<div class="navbar navbar-default navbar-static-top" role="navigation">
+	      <div class="container">
+	        <div class="navbar-header">
+	          <a href="" class="navbar-brand">Visulization of Wine Dataset for 2IMV20, TU/e</a>
+	        </div>
+	      </div>
+	    </div>
+	    <!-- Content -->
+	    <div id="content" class="container" >
+		    <div class="row">
+                <!--original dataset table-->
+				<div class="row featurette">
+					<!--statistics of the dataset with bar chart-->
+					<div class="row-8-md featurette">
+						<h2 class="featurette-heading">Heatmap of white wine samples.</h2>
+						<p class="lead">
+							<span class="text-muted"></span>
+						</p>
+						<div>
+							<div id="chart-heat"></div>
+						</div>
+					</div>
+				</div>
+            </div>
+  		<div id="push"></div>
+  	</div>
+	<!-- back to top -->
+	<div id="backToTop">
+		<a href="#" title="Scroll back to top"></a>
+	</div>
+	<div id="footer">
+		<div class="container">
+			<p class="text-muted" style="text-align: center;">Copyright &copy; <a href="https://github.com/lukewang7">Qiyue Wang</a>, <a href="https://github.com/lidalei">Dalei Li</a>.</p>
+		</div>
+	</div>
+	<div id="dialog" title="Basic dialog"></div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/static/js/jquery-2.2.0.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/jquery-ui.min.js"></script>
+	<script src="/static/js/d3.min.js"></script>
+    <script src="/static/js/d3.tip.v0.6.3.js"></script>
+    <script src="/static/js/heat-map.js"></script>    
+  </body>
+</html>

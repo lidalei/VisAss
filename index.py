@@ -9,6 +9,10 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
+@app.route('/heatmap')
+def heatmap():
+    return render_template('heat_map.html')
+
 @app.route('/getArticlesByAuthor/<author_name>')
 def get_articles_by_author(author_name = 'Xiaoou Tang'):
     nearest_author = "Dalei Li"
