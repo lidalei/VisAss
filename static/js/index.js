@@ -14,7 +14,6 @@ $(function() { // executed after the HTML content is loaded completely
     
 	// define the global variable to store instances (data set)
 	window.whiteWineInstances = null;
-	window.renderingType = "Scatter"; // Scatter, Line, Bar, ...
 	
     // after loading the DOM, adjust the svg size according to window height width ratio
     function autoAdjustWindow() {
@@ -41,169 +40,79 @@ $(function() { // executed after the HTML content is loaded completely
       animate: true
     });
 	
-	function render_luc(instances, isUpdate) {
-		var w = 700,
-			h = 700;
-	
-		var colorscale = d3.scale.category10();
-		
-		//Legend titles
-		var LegendOptions = ['WhiteWine0001'];
-		
-		//Data
-		var d = 
-				[
-					[
-						{axis:"Fixed acidity",value:instances[0]["fixed acidity"]/d3.max(instances, function(instance){return instance["fixed acidity"]})},
-						{axis:"Volatile acidity",value:instances[0]["volatile acidity"]/d3.max(instances, function(instance){return instance["volatile acidity"]})},
-						{axis:"Citric acid",value:instances[0]["citric acid"]/d3.max(instances, function(instance){return instance["citric acid"]})},
-						{axis:"Residual sugar",value:instances[0]["residual sugar"]/d3.max(instances, function(instance){return instance["residual sugar"]})},
-						{axis:"Chlorides",value:instances[0]["chlorides"]/d3.max(instances, function(instance){return instance["chlorides"]})},
-						{axis:"Free sulfur dioxide",value:instances[0]["free sulfur dioxide"]/d3.max(instances, function(instance){return instance["free sulfur dioxide"]})},
-						{axis:"Total sulfur dioxide",value:instances[0]["total sulfur dioxide"]/d3.max(instances, function(instance){return instance["total sulfur dioxide"]})},
-						{axis:"Density",value:instances[0]["density"]/d3.max(instances, function(instance){return instance["density"]})},
-						{axis:"pH",value:instances[0]["pH"]/d3.max(instances, function(instance){return instance["pH"]})},
-						{axis:"Sulphates",value:instances[0]["sulphates"]/d3.max(instances, function(instance){return instance["sulphates"]})},
-						{axis:"Alcohol",value:instances[0]["alcohol"]/d3.max(instances, function(instance){return instance["alcohol"]})},
-					]
-				];
-				
-		//Options for the Radar chart, other than default
-		var mycfg = {
-		  w: w,
-		  h: h,
-		  maxValue: 1.0,
-		  levels: 6,
-		  ExtraWidthX: 300
-		}
-		
-		//Call function to draw the Radar chart
-		//Will expect that data is in %'s
-		RadarChart.draw("#chart", d, mycfg);
-		
-		////////////////////////////////////////////
-		/////////// Initiate legend ////////////////
-		////////////////////////////////////////////
-		
-		var svg = d3.select('#body')
-			.selectAll('svg')
-			.append('svg')
-			.attr({"width": w+500,"height": h})
-		
-		//Create the title for the legend
-		var text = svg.append("text")
-			.attr({"class": "title",'transform': 'translate(90,0)',"x": w - 100,"y": 20,"font-size": "16px","fill": "#404040"})
-			.text('The attributes of the wine "whitewine0001"');
-				
-		//Initiate Legend	
-		var legend = svg.append("g")
-			.attr({"class": "legend","height": 100,"width": 200,'transform':'translate(90,20)'})
-			;
-			//Create colour squares
-			legend.selectAll('rect')
-			  .data(LegendOptions)
-			  .enter()
-			  .append("rect")
-			  .attr({"x": w - 65,"y":function(d, i){ return i * 20+10;},"width":10,"height":10})
-			  .style("fill", function(d, i){ return colorscale(i);})
-			  ;
-			//Create text next to squares
-			legend.selectAll('text')
-			  .data(LegendOptions)
-			  .enter()
-			  .append("text")
-			  .attr({"x": w - 52, "y": function(d, i){ return i * 20 + 9+10;},"font-size": "11px","fill": "#737373"})
-			  .text(function(d) { return d; })
-			  ;	
-	
-	}
-	
-	function transform(attrName,data) {
-	    d3.select("tbody").selectAll("tr").remove();
-	
-		// Header
-	    var th = d3.select("thead").selectAll("th")
-	            .data(jsonToArray(data[0]))
-	          	.enter().append("th")
-	          	.on("click", function(d){transform(d[0], data);})
-	            .text(function(d) { return d[0]; });
-	
-		// Rows	
-	    var tr = d3.select("tbody").selectAll("tr")
-	    	.data(data)
-			.enter().append("tr")
-			// .sort(function (a, b) { return a - b});
-			.sort(function (a, b) { return a == null || b == null ? 0 : Compare(a[attrName], b[attrName]);});
-	
-		// Cells
-	    var td = tr.selectAll("td")
-	            .data(function(d) { return jsonToArray(d); })
-	        	.enter().append("td")
-	            .text(function(d) { return d[1]; });
-
-	}
-	
-	
-	function Compare(a, b) {
-
-		if(!isNaN(parseFloat(a)) && !isNaN(parseFloat(b))){
-
-			return parseFloat(a) > parseFloat(b) ? 1 : parseFloat(a)==parseFloat(b) ? 0 : -1;
-			
-		}else{
-			a = a.toLowerCase();
-			b = b.toLowerCase();
-			return a > b ? 1 : a == b ? 0 : -1;//for string comparison
-		}
-		
-	}
-	function jsonKeyValueToArray(k, v) {return [k, v];}
-	
-	function jsonToArray(json) {
-		    var ret = new Array();
-		    var key;
-		    for (key in json) {
-		        if (json.hasOwnProperty(key)) {
-		            ret.push(jsonKeyValueToArray(key, json[key]));
-		        }
-		    }
-		    return ret;
-		}
-	
-	function render_table(instances, isUpdate) {
-        transform("ID", instances);
-    }
-    
     /*
-    * render statistics
+    * draw radar chart
+    * @para container, a HTML element that is used to contain radar chart, #instanceRadarChart form.
+    * @para parent of the container, #instanceRadarChartContainer form.
+    * @para instanceID, the ID of a white wine instance.
     */
-    function renderStatistics(d3_table, statistics) {
-        var thead = d3_table.append("thead"),
-            tbody = d3_table.append("tbody");
+	function radarRender(radarContainer, container, instanceID) {		
+        //Legend titles
+		var LegendOptions = ['White wine instance ' + instanceID];
+		
+        // dat to be rendered
+        var instance = window.whiteWineInstances[instanceID];
         
-        // get all keys
-        var atrributes = Object.keys(statistics),
-            staticticIndicators = Object.keys(statistics[atrributes[0]]);
-        staticticIndicators.unshift("attr");
+        var attributes = Object.keys(instance);
         
-//        // add thead
-        thead.append("tr")
-            .selectAll("th")
-            .data(staticticIndicators)
-            .enter()
-            .append("th")
-            .text(function(d) {return d;});   
-        
-        // add tbody
-        for(statistic in statistics) {
-            var tr = tbody.append("tr");
-            tr.append("td").text(statistic);
-            for(value in statistics[statistic]) {
-                tr.append("td").text(parseFloat(statistics[statistic][value]).toPrecision(4));
-            }
+        var indexOfID = attributes.indexOf("ID");
+        if(indexOfID != -1) {
+            attributes.splice(indexOfID, 1);
+        }
+        var indexOfQuality = attributes.indexOf("quality");
+        if(indexOfQuality != -1) {
+            attributes.splice(indexOfQuality, 1);
         }
         
-    }
+        var d = [];
+        
+        attributes.forEach(function(attr) {
+            d.push({
+                "axis": attr,
+                "value": instance[attr] / window.whiteWineStatistics[attr]["max"]
+            });
+        });
+        
+		//Call function to draw the Radar chart
+		//Will expect that data is in %'s
+		RadarChart.draw(radarContainer, [d]);
+        
+        // add legend
+//		
+//        var colorscale = d3.scale.category10();
+//        
+//		var svg = d3.select(container)
+//			.selectAll('svg')
+//			.append('svg')
+//			.attr({"width": w+500,"height": h});
+//		
+//		//Create the title for the legend
+//		var text = svg.append("text")
+//			.attr({"class": "title",'transform': 'translate(90,0)',"x": w - 100,"y": 20,"font-size": "16px","fill": "#404040"})
+//			.text('The attributes of the wine "whitewine0001"');
+//				
+//		//Initiate Legend	
+//		var legend = svg.append("g")
+//			.attr({"class": "legend","height": 100,"width": 200,'transform':'translate(90,20)'})
+//			;
+//			//Create colour squares
+//			legend.selectAll('rect')
+//			  .data(LegendOptions)
+//			  .enter()
+//			  .append("rect")
+//			  .attr({"x": w - 65,"y":function(d, i){ return i * 20+10;},"width":10,"height":10})
+//			  .style("fill", function(d, i){ return colorscale(i);})
+//			  ;
+//			//Create text next to squares
+//			legend.selectAll('text')
+//			  .data(LegendOptions)
+//			  .enter()
+//			  .append("text")
+//			  .attr({"x": w - 52, "y": function(d, i){ return i * 20 + 9+10;},"font-size": "11px","fill": "#737373"})
+//			  .text(function(d) { return d; })
+//			  ;	
+	
+	}
     
     /*
     * Compare good wines with bad wines of quality
@@ -239,7 +148,7 @@ $(function() { // executed after the HTML content is loaded completely
         attributes.forEach(function(attribute) {
             attrStatis.push({
                 "attribute": attribute,
-                "quality": "good",
+                "quality": "Good white wine",
                 "mean": d3.mean(topTenPercentInstances, function(instance){return instance[attribute];}),
                 "min": d3.min(topTenPercentInstances, function(instance){return instance[attribute];}),
                 "max": d3.max(topTenPercentInstances, function(instance){return instance[attribute];}),
@@ -250,7 +159,7 @@ $(function() { // executed after the HTML content is loaded completely
             
             attrStatis.push({
                 "attribute": attribute,
-                "quality": "bad",
+                "quality": "Bad white wine",
                 "mean": d3.mean(botTenPercentInstances, function(instance){return instance[attribute];}),
                 "min": d3.min(botTenPercentInstances, function(instance){return instance[attribute];}),
                 "max": d3.max(botTenPercentInstances, function(instance){return instance[attribute];}),
@@ -488,7 +397,7 @@ $(function() { // executed after the HTML content is loaded completely
 		var d3_svg_g_circles = d3_svg_g.selectAll("circle").data(instances);
 		if(isUpdate) { // is update
 		  d3_svg_g_circles.transition().duration(300)
-			.attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3});	
+			.attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}});
         }
         
         // draw axises
@@ -510,11 +419,15 @@ $(function() { // executed after the HTML content is loaded completely
 
         // Enter handles added data only
         d3_svg_g_circles.enter().append("circle")
-            .attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3});
+            .attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}});
 
         // Exit…
         d3_svg_g_circles.exit().remove();
 		
+        
+        // radar chart
+        // TODO
+        
 		/*
 		// manully visualize, not applicable
 		instances.forEach(function(instance) {
@@ -608,7 +521,7 @@ $(function() { // executed after the HTML content is loaded completely
 //        renderStatistics(d3.select("#statistics").select("table"), window.whiteWineStatistics);
 
 //        console.log(window.whiteWineInstances);        
-        // render_luc(window.whiteWineInstances,false);
+         radarRender("#instanceRadarChart", "#instanceRadarChartContainer", 200);
 //		render_table(window.whiteWineInstances,false);
 	});
 	
