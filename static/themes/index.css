@@ -100,11 +100,11 @@ Writing the visualization code here
 
 /* axis */
 .axis text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 12pt;
+    font-family: 'Poiret One', cursive;
+    font-size: "2em";
 }
 .axis .label {
-    font-size: 20pt;
+    font-size: "2em";
 }
 
 .axis path, .axis line {
@@ -112,10 +112,15 @@ Writing the visualization code here
     stroke: #000;
     shape-rendering: crispEdges;
 }
+.y.axis path, .y.axis line {
+    stroke: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
 
 .color-legend text {
     font-family: 'Open Sans', sans-serif;
-    font-size: 12pt;
+    font-size: "2em";
 }
 /* end axis */
 
@@ -149,7 +154,39 @@ Writing the visualization code here
   left: 0;
 }
 /* end tool tip */
-/*heat map*/
+
+/* parallel coordinates */
+.background path {
+  fill: none;
+  stroke: #ddd;
+  shape-rendering: crispEdges;
+}
+
+.foreground path {
+  fill: none;
+  stroke: steelblue;
+}
+
+.brush .extent {
+  fill-opacity: .3;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  cursor: move;
+}
+/* end parallel coordinates*/
+
+/* heat map*/
 
 rect.bordered{
 	stroke:#E6E6E6;

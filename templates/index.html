@@ -7,6 +7,7 @@
     <!-- Bootstrap -->
     <link rel="stylesheet" href="/static/themes/bootstrap.min.css">    
     <link rel="stylesheet" href="/static/themes/jquery-ui.min.css">
+    <link rel="stylesheet" href="/static/themes/radar-chart.min.css">
 	<link rel="stylesheet" href="/static/themes/index.css">
   </head>
   <body>
@@ -22,15 +23,29 @@
 	    <!-- Content -->
 	    <div id="content" class="container" >
             <div class="row">
-                <!--statistics of the dataset with bar chart-->
-                <div class="col-6-md">
+                <div class="col-md-7">
                     <div class="featurette">
-                        <h2 class="featurette-heading">What are the differences between wines of good quality and bad quality?</h2>
+                        <h2 class="featurette-heading"></h2>
                         <p class="lead">
-                            <span class="text-muted"></span>
+                            <span class="text-muted">What are the relationships between each attribute?</span>
                         </p>
                     </div>
-                    <div class="btn-group" role="group" aria-label="tool bar" id = "comparisonToolBar" style="margin-left:80px;">
+                    <div id="parallelCoordinates">
+                        <svg style="width: 100%; height: 550px">
+                            <!--group, contains the visualized charts-->
+                            <g></g>
+                        </svg>
+                    </div>
+                </div>
+                <!--statistics of the dataset with bar chart-->
+                <div class="col-md-5">
+                    <div class="featurette">
+                        <h2 class="featurette-heading"></h2>
+                        <p class="lead">
+                            <span class="text-muted">What are the differences between wines of good quality and bad quality?</span>
+                        </p>
+                    </div>
+                    <div class="btn-group" role="group" aria-label="tool bar" id = "comparisonToolBar" style="margin-left:60px;">
                         <button type="button" class="btn btn-default" title="x label" disabled>Statistics</button>
                         <button type="button" class="btn btn-default">mean</button>
                         <button type="button" class="btn btn-default">min</button>
@@ -45,28 +60,18 @@
                         </svg>
                     </div>
                 </div>
-                <div class="col-6-md">
-                    <div class="featurette">
-                        <h2 class="featurette-heading">What are the differences between wines of good quality and bad quality?</h2>
-                        <p class="lead">
-                            <span class="text-muted"></span>
-                        </p>
-                    </div>
-                    <div></div>
-                </div>
             </div>
-            <!--scatter plot and radar chart-->
             <div class="row">
                 <!--scatter plot-->
-                <div class="col-6-md" id="scatterPlot">
+                <div class="col-md-8">
                     <div class="featurette">
-                        <h2 class="featurette-heading">What is the relationship between wine quality and the physicochemical properties?</h2>
+                        <h2 class="featurette-heading"></h2>
                         <p class="lead">
-                            <span class="text-muted"></span>
+                            <span class="text-muted">What is the relationship between wine quality and the physicochemical properties?</span>
                         </p>
                     </div>
-                    <div id = "scatterToolBar" style="margin-left:80px;">
-                        <div class="btn-group row" role="group" aria-label="tool bar" id="xLabelBtns">
+                    <div id = "scatterToolBar">
+                        <div class="btn-group row" role="group" aria-label="tool bar" id="xLabelBtns" style="margin-left:60px;">
                             <button type="button" class="btn btn-default" title="x label" disabled>X-Label</button>
                             <button type="button" class="btn btn-default" title="fixed acidity">FAC</button>
                             <button type="button" class="btn btn-default" title="volatile acidity">VAC</button>
@@ -82,7 +87,7 @@
                             <button type="button" class="btn btn-default active" title="alcohol">ALC</button>
                             <button type="button" class="btn btn-default" title="quality">QUA</button>
                         </div>
-                        <div class="btn-group row" role="group" aria-label="tool bar" id="yLabelBtns">
+                        <div class="btn-group row" role="group" aria-label="tool bar" id="yLabelBtns" style="margin-left:60px;">
                             <button type="button" class="btn btn-default" title="y label" disabled>Y-Label</button>
                             <button type="button" class="btn btn-default" title="fixed acidity">FAC</button>
                             <button type="button" class="btn btn-default" title="volatile acidity">VAC</button>
@@ -98,7 +103,7 @@
                             <button type="button" class="btn btn-default" title="alcohol">ALC</button>
                             <button type="button" class="btn btn-default active" title="quality">QUA</button>
                         </div>
-                        <div class="btn-group row" role="group" aria-label="tool bar" id="zLabelBtns">
+                        <div class="btn-group row" role="group" aria-label="tool bar" id="zLabelBtns" style="margin-left:60px;">
                             <button type="button" class="btn btn-default" title="z label" disabled>Z-Label</button>
                             <button type="button" class="btn btn-default" title="fixed acidity">FAC</button>
                             <button type="button" class="btn btn-default" title="volatile acidity">VAC</button>
@@ -114,18 +119,31 @@
                             <button type="button" class="btn btn-default" title="alcohol">ALC</button>
                             <button type="button" class="btn btn-default" title="quality">QUA</button>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6" style="margin-left:60px;">
+                                <div class="input-group">
+                                  <input type="text" class="form-control" placeholder="Number of bins">
+                                  <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="changeNumberOfBinsBtn">Apply</button>
+                                  </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="canvas">
+                    <div id="scatterPlot">
                         <svg style="width: 100%; height: 550px">
                             <!--group, contains the visualized charts-->
                             <g></g>
                         </svg>
                     </div>
                 </div>
-                <!--radar chart-->
-                <div class="col-6-md">
-                    <div id="instanceRadarChartContainer" class="container">
-                        <div id="instanceRadarChart"></div>
+                <div class="col-md-4">
+                    <!--radar chart-->
+                    <div id="instanceRadarChart">
+                        <svg style="width: 100%; height: 550px">
+                            <!--group, contains the visualized charts-->
+                            <g></g>
+                        </svg>                    
                     </div>
                 </div>
             </div>

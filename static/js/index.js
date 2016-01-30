@@ -17,12 +17,23 @@ $(function() { // executed after the HTML content is loaded completely
 	
     // after loading the DOM, adjust the svg size according to window height width ratio
     function autoAdjustWindow() {
-        var windowWidth = $(this).width(), windowHeight = $(this).height(),
-            $canvas_svg = $("#canvas > svg"),
-            svgWidth = $canvas_svg.width(),
-            svgHeight = $canvas_svg.height();
-        $canvas_svg.height(Math.floor(svgWidth * windowHeight / windowWidth));
+        var windowWidth = $(window).width(), windowHeight = $(window).height(),
+            hwRatio = windowHeight / windowWidth,
+            $scatter_svg = $("#scatterPlot > svg"),
+            scatterSvgWidth = $scatter_svg.width(),
+            $compareGoodBadWines_svg = $("#compareGoodBadWines > svg"),
+            compareGoodBadWinesSvgWidth = $compareGoodBadWines_svg.width(),
+            $parallelCoordinates_svg = $("#parallelCoordinates > svg"),
+            parallelCoordinatesSvgWidth = $parallelCoordinates_svg.width(),
+            $instanceRadarChart_svg = $("#instanceRadarChart > svg"),
+            instanceRadarChartSvgWidth = $instanceRadarChart_svg.width();
+            
+        $scatter_svg.height(Math.floor(scatterSvgWidth * hwRatio));
+        $compareGoodBadWines_svg.height(Math.floor(compareGoodBadWinesSvgWidth * hwRatio));
+        $parallelCoordinates_svg.height(Math.floor(parallelCoordinatesSvgWidth * hwRatio));
+        $instanceRadarChart_svg.height(Math.floor(instanceRadarChartSvgWidth * hwRatio));
     };
+    
     autoAdjustWindow();
     
 	// auto adjust when resizing window
@@ -34,7 +45,6 @@ $(function() { // executed after the HTML content is loaded completely
 		}
 	});
 	
-    
     // resizable tables, charts
     $( ".resizable" ).resizable({
       animate: true
@@ -43,10 +53,13 @@ $(function() { // executed after the HTML content is loaded completely
     /*
     * draw radar chart
     * @para container, a HTML element that is used to contain radar chart, #instanceRadarChart form.
-    * @para parent of the container, #instanceRadarChartContainer form.
     * @para instanceID, the ID of a white wine instance.
     */
-	function radarRender(radarContainer, container, instanceID) {		
+	function radarRender(radarContainer, instanceID) {
+        
+        var chart = RadarChart.chart();
+        var data = {};
+        
         //Legend titles
 		var LegendOptions = ['White wine instance ' + instanceID];
 		
@@ -64,18 +77,20 @@ $(function() { // executed after the HTML content is loaded completely
             attributes.splice(indexOfQuality, 1);
         }
         
-        var d = [];
+        data["axes"] = [];
         
         attributes.forEach(function(attr) {
-            d.push({
-                "axis": attr,
+            data["axes"].push({
+                "axis": [attr],
                 "value": instance[attr] / window.whiteWineStatistics[attr]["max"]
             });
         });
         
-		//Call function to draw the Radar chart
-		//Will expect that data is in %'s
-		RadarChart.draw(radarContainer, [d]);
+        // TODO
+        RadarChart.defaultConfig.radius = 5;
+        RadarChart.defaultConfig.w = $(radarContainer).find("svg").width();
+        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height();
+        RadarChart.draw(radarContainer, [data]);
         
         // add legend
 //		
@@ -169,15 +184,18 @@ $(function() { // executed after the HTML content is loaded completely
             });  
         });
         
-//        console.log(attrStatis);
-        // draw the bar charts
+
         
+        /* 
+        * draw the bar charts
+        *
+        */
         // define margin and padding
 		var d3_svg = d3.select(container).select("svg"),
 			svgWidth = d3_svg.style("width").replace("px", ""),
 			svgHeight = d3_svg.style("height").replace("px", ""),
 			margin = {top: 20, right: 20, bottom: 20, left: 20},
-			padding = {top: 20, right: 20, bottom: 60, left: 60},
+			padding = {top: 40, right: 40, bottom: 40, left: 40},
             barPadding = 0.2,
 			innerWidth = svgWidth - margin.left - margin.right,
 			innerHeight = svgHeight - margin.top - margin.bottom,
@@ -202,7 +220,6 @@ $(function() { // executed after the HTML content is loaded completely
         var yAxisLabel = yAxisG.append("text")
             .style("text-anchor", "middle")
             .attr("transform", "translate(-" + 40 + "," + (height / 2) + ") rotate(-90)")
-            .attr("class", "label")
             .text("Normalized " + yColumn);
         
         var colorLegendG = d3_svg_g.append("g")
@@ -270,12 +287,7 @@ $(function() { // executed after the HTML content is loaded completely
               return layer.key;
             }));
 
-            xAxisG
-              .call(xAxis)
-              .selectAll("text")  
-              .attr("dx", "-.8em")
-              .attr("dy", "1em")
-              .attr("transform", "rotate(-20)" );
+            xAxisG.call(xAxis).selectAll("text").attr("dx", "-.8em").attr("dy", "1em").attr("transform", "rotate(-20)");
 
             yAxisG.call(yAxis);
 
@@ -324,7 +336,7 @@ $(function() { // executed after the HTML content is loaded completely
     
     // first, define the canvas
     // define margin and padding
-    var d3_svg = d3.select("#scatterPlot").select("#canvas").select("svg"),
+    var d3_svg = d3.select("#scatterPlot").select("svg"),
         d3_svg_paras = {
             svgWidth: parseFloat(d3_svg.style("width").replace("px", "")),
             svgHeight: parseFloat(d3_svg.style("height").replace("px", "")),
@@ -347,9 +359,7 @@ $(function() { // executed after the HTML content is loaded completely
         "xAttr": "alcohol",
         "yAttr": "quality",
         "zAttr": "quality",
-        // map original data to svg visible area, width and height, respectively
-        "xLinearScale": d3.scale.linear().range([0, d3_svg_g_paras.width]),
-        "yLinearScale": d3.scale.linear().range([d3_svg_g_paras.height, 0]),
+        "numberOfBins": 10,
         "zColorScale": d3.scale.category10()
         /*
         var rMin = 2, rMax = 20; // "r" stands for radius
@@ -358,11 +368,6 @@ $(function() { // executed after the HTML content is loaded completely
             .range([rMin, rMax]);
         */
     },
-        axises = {
-            // define axis
-            "xAxis": d3.svg.axis().scale(axisesParas["xLinearScale"]).orient("bottom"),
-            "yAxis": d3.svg.axis().scale(axisesParas["yLinearScale"]).orient("left")
-        },
         axisLabelsParas = { // define axis labels
             // xAxisLabelText: xAttr,
             "xAxisLabelOffset": 48,
@@ -375,66 +380,325 @@ $(function() { // executed after the HTML content is loaded completely
 	 * @para instances, object. The data set to be rendered.
 	 * @para isUpdate, boolean. true, first time rendering; false, update. 
 	 */
-	function scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axises, axisLabelsParas, instances, isUpdate) {
+	function scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axisLabelsParas, instances, isUpdate) {
+        var statistics = window.whiteWineStatistics;
         
         var width = d3_svg_g_paras.width,
             height = d3_svg_g_paras.height,
-            xLinearScale = axisesParas.xLinearScale,
-            yLinearScale = axisesParas.yLinearScale,
             xAttr = axisesParas["xAttr"],
-            yAttr = axisesParas["yAttr"],
-            xAxis = axises["xAxis"],
-            yAxis = axises["yAxis"];
+            yAttr = axisesParas["yAttr"];
         
         // clear previous scatter
         d3_svg_g.selectAll("*").remove();
         
-        // scatter, yAttr = f(xAttr)
-		xLinearScale.domain(d3.extent(instances, function(instance){return instance[xAttr];}));
-		yLinearScale.domain(d3.extent(instances, function(instance){return instance[yAttr];}));	
+        if(xAttr == yAttr) {    // histogram
+            var numberOfBins = axisesParas["numberOfBins"],
+                maxAttrValue = statistics[xAttr]["max"],
+                minAttrValue = statistics[xAttr]["min"],
+                intervalWidth = (maxAttrValue - minAttrValue) / numberOfBins;            
+            // initialiaze the histogram
+            var histogram = [];
+            for(var i = 0; i < numberOfBins; ++i) {
+                histogram.push(0);
+            }
+            
+            // compute the histogram
+            var histIndex = 0;
+            for(var i = 0; i < instances.length; ++i) {
+                histIndex = Math.floor((instances[i][xAttr] - minAttrValue) / intervalWidth);
+                if(histIndex == numberOfBins) {
+                    --histIndex;
+                }
+                ++histogram[ histIndex ];
+            }
+            
+            // map original data to svg visible area, width and height, respectively
+            var xOrdinalScale = d3.scale.ordinal().rangeBands([0, width], 0.2);
+            var yLinearScale = d3.scale.linear().range([height, 0]);
+            
+            var binIndexArray =[];
+            for(var i = 0; i < numberOfBins; ++i) {
+                binIndexArray.push(i);
+            }
+            
+            xOrdinalScale.domain(binIndexArray);
+            yLinearScale.domain(d3.extent(histogram));
+            
+            
+            // add tips
+            var tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .offset([-10, 0])
+                .html(function(d) {
+                    return "<strong>Frequency:</strong> <span>" + d + "</span>";
+            });
+
+            d3_svg_g.call(tip);
+            
+            
+            // draw histograms
+            var d3_svg_g_bars = d3_svg_g.selectAll("rect").data(histogram);
+            
+            d3_svg_g_bars.enter().append("rect")
+                .attr("x", function (d, i) { return xOrdinalScale(i); })
+                .attr("y", function (d) { return yLinearScale(d); })
+                .attr("width", xOrdinalScale.rangeBand())
+                .attr("height", function (d){ return height - yLinearScale(d); })
+                .attr("fill", "#ff7f0e")
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
+            
+            d3_svg_g_bars.exit().remove();
+            
+            // draw axises
+            // change the index of intervals to interval itself
+            var binIntervalArray =[];
+            for(var i = 0; i < numberOfBins; ++i) {
+                binIntervalArray.push((minAttrValue + i * intervalWidth).toPrecision(4) + "-");
+            }
+            xOrdinalScale.domain(binIntervalArray);
+            
+            var xAxis = d3.svg.axis().scale(xOrdinalScale).orient("bottom")
+                .outerTickSize(0);
+            
+            var yAxis = d3.svg.axis().scale(yLinearScale).orient("left")
+                .ticks(5)                   // Use approximately 5 ticks marks.
+                .tickFormat(d3.format("s")) // Use intelligent abbreviations, e.g. 5M for 5 Million
+                .outerTickSize(0);          // Turn off the marks at the end of the axis.
+
+            // set axis, give it a class so it can be used to select only xaxis labels  below
+            var xAxisG = d3_svg_g.append("g")
+                .attr({"transform": "translate(0," + height + ")", "class": "x axis"});
+            var yAxisG = d3_svg_g.append("g").attr({"class": "y axis"});		
+            var xAxisLabel = xAxisG.append("text")
+                .style("text-anchor", "middle")
+                .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset, "class": "label"})
+                .text(xAttr);
+            var yAxisLabel = yAxisG.append("text")
+                .style("text-anchor", "middle")
+                .attr("transform", "translate(-" + axisLabelsParas.yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)")
+                .text("frequency");
+            // draw axis
+            xAxisG.call(xAxis);
+            yAxisG.call(yAxis);            
+        }
+        else {  // scatter, yAttr = f(xAttr)
+            var xLinearScale = d3.scale.linear().range([0, width]),
+                yLinearScale = d3.scale.linear().range([height, 0]),
+                xAxis = d3.svg.axis().scale(xLinearScale).orient("bottom"),
+                yAxis = d3.svg.axis().scale(yLinearScale).orient("left");
+            
+            xLinearScale.domain([statistics[xAttr]["min"], statistics[xAttr]["max"]]);
+            yLinearScale.domain([statistics[yAttr]["min"], statistics[yAttr]["max"]]);	
+
+            // Update...
+            var d3_svg_g_circles = d3_svg_g.selectAll("circle").data(instances);
+            if(isUpdate) { // is update
+              d3_svg_g_circles.transition().duration(300)
+                .attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}});
+            }
+
+            // draw axises
+            // set axis, give it a class so it can be used to select only xaxis labels  below
+            var xAxisG = d3_svg_g.append("g")
+                .attr({"transform": "translate(0," + height + ")", "class": "x axis"});
+            var yAxisG = d3_svg_g.append("g").attr({"class": "y axis"});		
+            var xAxisLabel = xAxisG.append("text")
+                .style("text-anchor", "middle")
+                .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset}).text(xAttr);
+            var yAxisLabel = yAxisG.append("text")
+                .style("text-anchor", "middle")
+                .attr("transform", "translate(-" + axisLabelsParas.yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)").text(yAttr);
+            // draw axis
+            xAxisG.call(xAxis);
+            yAxisG.call(yAxis);
+
+            // Enter handles added data only
+            d3_svg_g_circles.enter().append("circle")
+                .attr({"fill": function(instance){return "#74c476"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}})
+                .on("click", function() {
+                // TODO
+                var circle = d3.select(this);
+                var instanceID = parseFloat(circle.attr("id").replace("whiteWine", ""));
+                radarRender("#instanceRadarChart", instanceID);
+            });
+
+            // Exit…
+            d3_svg_g_circles.exit().remove(); 
+        }
+	}
+    
+    
+    /*
+    * parallel coordinates
+    * from http://bl.ocks.org/jasondavies/1341281
+    */
+    
+    // first, define the canvas
+    // define margin and padding
+    var d3_svg_pc = d3.select("#parallelCoordinates").select("svg"),
+        d3_svg_paras_pc = {
+            svgWidth: parseFloat(d3_svg_pc.style("width").replace("px", "")),
+            svgHeight: parseFloat(d3_svg_pc.style("height").replace("px", "")),
+            margin: {top: 20, right: 20, bottom: 20, left: 20},
+            padding: {top: 40, right: 40, bottom: 40, left: 40}
+        };
+
+    // set visible area, i.e., the container of visualized charts
+    var d3_svg_g_pc = d3_svg_pc.select("g").attr({"transform": "translate(" + (d3_svg_paras_pc.margin.left + d3_svg_paras_pc.padding.left) + "," + (d3_svg_paras_pc.margin.top + d3_svg_paras_pc.padding.top) + ")"}),
+        d3_svg_g_paras_pc = {
+            innerWidth: d3_svg_paras_pc.svgWidth - d3_svg_paras_pc.margin.left - d3_svg_paras_pc.margin.right,
+            innerHeight: d3_svg_paras_pc.svgHeight - d3_svg_paras_pc.margin.top - d3_svg_paras_pc.margin.bottom
+        };
+    d3_svg_g_paras_pc.width = d3_svg_g_paras_pc.innerWidth - d3_svg_paras_pc.padding.left - d3_svg_paras.padding.right;
+    d3_svg_g_paras_pc.height= d3_svg_g_paras_pc.innerHeight - d3_svg_paras_pc.padding.top - d3_svg_paras_pc.padding.bottom;
+    
+    var axisesParas_pc = {
+        // next, define x-label, y-label, z-label and assign default values
+        // map original data to svg visible area, width and height, respectively
+        "xOrdinalScale": d3.scale.ordinal().rangePoints([0, d3_svg_g_paras_pc.width], 1),
+        "yLinearScale": {},
+        "zColorScale": d3.scale.category10(),
+        "dragging": {},
+        // define axis
+        "axis": d3.svg.axis().orient("left"),
+        "line": d3.svg.line(),
+        "background" :undefined,
+        "foreground": undefined,
+        "dimensions": undefined
+    };
+    
+    /*
+    * render parallel coordinates
+    * @para instances, the data to be rendered
+    */
+    function renderParallelCoordinates(instances) {
         
-        // Update...
-		var d3_svg_g_circles = d3_svg_g.selectAll("circle").data(instances);
-		if(isUpdate) { // is update
-		  d3_svg_g_circles.transition().duration(300)
-			.attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}});
+        var x = axisesParas_pc["xOrdinalScale"],
+            y = axisesParas_pc["yLinearScale"],
+            background = axisesParas_pc["background"],
+            foreground = axisesParas_pc["foreground"],
+            height = d3_svg_g_paras_pc["height"],
+            width = d3_svg_g_paras_pc["width"],
+            dragging = axisesParas_pc["dragging"],
+            axis = axisesParas_pc["axis"];
+        
+        // Extract the list of dimensions and create a scale for each.
+        x.domain(axisesParas_pc["dimensions"] = d3.keys(instances[0]).filter(function(d) {
+            return d != "ID" && (y[d] = d3.scale.linear().domain(d3.extent(instances, function(p) { return +p[d];})).range([height, 0]));
+        }));
+
+        // Add grey background lines for context.
+        background = d3_svg_g_pc.append("g")
+            .attr("class", "background")
+            .selectAll("path")
+            .data(instances)
+            .enter().append("path")
+            .attr("d", path);
+        
+        // Add blue foreground lines for focus.
+        foreground = d3_svg_g_pc.append("g")
+            .attr("class", "foreground")
+            .selectAll("path")
+            .data(instances)
+            .enter().append("path")
+            .attr("d", path);
+        
+        // Add a group element for each dimension.
+        var g = d3_svg_g_pc.selectAll(".dimension")
+            .data(axisesParas_pc["dimensions"])
+            .enter().append("g")
+            .attr("class", "dimension")
+            .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+            .call(d3.behavior.drag()
+            .origin(function(d) { return {x: x(d)}; })
+            .on("dragstart", function(d) {
+                axisesParas_pc["dragging"][d] = x(d);
+                axisesParas_pc["background"].attr("visibility", "hidden");
+            })
+            .on("drag", function(d) {
+                dragging[d] = Math.min(width, Math.max(0, d3.event.x));
+                axisesParas_pc["foreground"].attr("d", path);
+                axisesParas_pc["dimensions"].sort(function(a, b) { return position(a) - position(b); });
+                x.domain(axisesParas_pc["dimensions"]);
+                g.attr("transform", function(d) { return "translate(" + position(d) + ")"; })
+            })
+            .on("dragend", function(d) {
+                delete axisesParas_pc["dragging"][d];
+                transition(d3.select(this)).attr("transform", "translate(" + x(d) + ")");
+                transition(axisesParas_pc["foreground"]).attr("d", path);
+                axisesParas_pc["background"]
+                    .attr("d", path)
+                    .transition()
+                    .delay(500)
+                    .duration(0)
+                    .attr("visibility", null);
+            }));
+
+            // Add an axis and title.
+            g.append("g")
+                .attr("class", "axis")
+                .each(function(d) { d3.select(this).call(axis.scale(y[d])); })
+                .append("text")
+                .style("text-anchor", "middle")
+                .attr("y", -30)
+                .text(function(d) { return d; })
+                .attr("transform", "rotate(20)");
+        
+            // Add and store a brush for each axis.
+            g.append("g")
+              .attr("class", "brush")
+              .each(function(d) {
+                d3.select(this).call(y[d].brush = d3.svg.brush().y(y[d]).on("brushstart", brushstart).on("brush", brush));  
+            })
+            .selectAll("rect")
+            .attr("x", -8)
+            .attr("width", 16);
+        
+        
+        function position(d) {
+            var dragging = axisesParas_pc["dragging"],
+                x = axisesParas_pc["xOrdinalScale"],
+                v = dragging[d];
+            
+            return v == null ? x(d) : v;
         }
         
-        // draw axises
-        // set axis, give it a class so it can be used to select only xaxis labels  below
-        var xAxisG = d3_svg_g.append("g")
-            .attr({"transform": "translate(0," + height + ")", "class": "xaxis"});
-        var yAxisG = d3_svg_g.append("g").attr({"class": "yaxis"});		
-        var xAxisLabel = xAxisG.append("text")
-            .style("text-anchor", "middle")
-            .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset, "class": "label"}).style("font-size", "2em")
-            .text(xAttr);
-        var yAxisLabel = yAxisG.append("text")
-            .style("text-anchor", "middle")
-            .attr("transform", "translate(-" + axisLabelsParas.yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)").style("font-size", "2em")
-            .text(yAttr);
-        // draw axis
-        xAxisG.call(xAxis);
-        yAxisG.call(yAxis);
+        function transition(g) {
+            return g.transition().duration(500);
+        }
 
-        // Enter handles added data only
-        d3_svg_g_circles.enter().append("circle")
-            .attr({"fill": function(instance){return "#2ca02c"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}});
-
-        // Exit…
-        d3_svg_g_circles.exit().remove();
-		
+        // Returns the path for a given data point.
+        function path(d) {
+            var dimensions = axisesParas_pc["dimensions"],
+                line = axisesParas_pc["line"],
+                y = axisesParas_pc["yLinearScale"];
+            
+            return line(dimensions.map(function(p) { return [position(p), y[p](d[p])]; }));
+        }
         
-        // radar chart
-        // TODO
+        function brushstart() {
+            d3.event.sourceEvent.stopPropagation();
+        }
         
-		/*
-		// manully visualize, not applicable
-		instances.forEach(function(instance) {
-			
-		});
-		*/
-	}
+        // Handles a brush event, toggling the display of foreground lines.
+        function brush() {
+            var dimensions = axisesParas_pc["dimensions"],
+                y = axisesParas_pc["y"],
+                foreground = axisesParas_pc["foreground"];
+            
+            var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
+                extents = actives.map(function(p) { return y[p].brush.extent(); });
+            
+            foreground.style("display", function(d) {
+                return actives.every(function(p, i) {
+                    return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+              }) ? null : "none";
+          });
+        }
+    }
+    
+    
     
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter
 	var d3_whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", d3_type, function(error, instances) {
@@ -502,26 +766,37 @@ $(function() { // executed after the HTML content is loaded completely
         window.whiteWineInstances = instances;
         
         // scatter render
-        scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axises, axisLabelsParas, window.whiteWineInstances, false);
+        scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axisLabelsParas, window.whiteWineInstances, false);
         // bind x, y, z-labels change events
         $("#xLabelBtns > button").click(function() {
             axisesParas.xAttr = $(this).attr("title");
             $(this).addClass("active").siblings().removeClass("active");
-            scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axises, axisLabelsParas, window.whiteWineInstances, false);
+            scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axisLabelsParas, window.whiteWineInstances, false);
         });
         
         $("#yLabelBtns > button").click(function() {
             axisesParas.yAttr = $(this).attr("title");
             $(this).addClass("active").siblings().removeClass("active");
-            scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axises, axisLabelsParas, window.whiteWineInstances, false);
+            scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axisLabelsParas, window.whiteWineInstances, false);
+        });
+        
+        $("#changeNumberOfBinsBtn").click(function() {
+            var numberOfBins = Math.round(parseFloat($(this).parent().prev().val()));
+            if(isNaN(numberOfBins)) {
+                ;
+            }
+            else {
+                axisesParas["numberOfBins"] = numberOfBins;
+                scatterRender(d3_svg_g, d3_svg_g_paras, axisesParas, axisLabelsParas, window.whiteWineInstances, false);
+            }
         });
         
         
         
 //        renderStatistics(d3.select("#statistics").select("table"), window.whiteWineStatistics);
 
-//        console.log(window.whiteWineInstances);        
-         radarRender("#instanceRadarChart", "#instanceRadarChartContainer", 200);
+//        console.log(window.whiteWineInstances);
+        renderParallelCoordinates(instances);
 //		render_table(window.whiteWineInstances,false);
 	});
 	
