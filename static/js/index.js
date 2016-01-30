@@ -497,10 +497,10 @@ $(function() { // executed after the HTML content is loaded completely
         if(indexOfID != -1) {
             attributes.splice(indexOfID, 1);
         }
-        var indexOfQuality = attributes.indexOf("quality");
-        if(indexOfQuality != -1) {
-            attributes.splice(indexOfQuality, 1);
-        }
+//        var indexOfQuality = attributes.indexOf("quality");
+//        if(indexOfQuality != -1) {
+//            attributes.splice(indexOfQuality, 1);
+//        }
         
         data["axes"] = [];
         
