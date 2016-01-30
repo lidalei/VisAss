@@ -37,6 +37,209 @@ $(function() { // executed after the HTML content is loaded completely
     
     
     /*
+    * Compare top % and bottom % quality wines of quality
+    * @para container, the element to contain the rendered chart.
+    * @para sortedInstances, descending.
+    * @para instancesStatistics.
+    */
+    function compareTopAndBottom(container, sortedInstances, instancesStatistics) {
+        
+        // define margin and padding
+		var d3_svg = d3.select(container).select("svg"),
+			svgWidth = d3_svg.style("width").replace("px", ""),
+			svgHeight = d3_svg.style("height").replace("px", ""),
+			margin = {top: 20, right: 20, bottom: 20, left: 20},
+			padding = {top: 20, right: 20, bottom: 40, left: 40},
+            barPadding = 0.2,
+			innerWidth = svgWidth - margin.left - margin.right,
+			innerHeight = svgHeight - margin.top - margin.bottom,
+			width = innerWidth - padding.left - padding.right,
+			height = innerHeight - padding.top - padding.bottom;
+		
+        // clear all previous one
+        d3_svg.select("*").remove();
+        d3_svg.append("g");
+        
+		// set visible area, i.e., the container of visualized charts
+		var d3_svg_g = d3_svg.select("g").attr({"transform": "translate(" + (margin.left + padding.left) + "," + (margin.top + padding.top) + ")"});        
+        
+        var xColumn = "attribute",
+            yColumn = "median",
+            colorColumn = "quality",
+            layerColumn = colorColumn;
+        
+        var xAxisG = d3_svg_g.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")");
+        
+        var yAxisG = d3_svg_g.append("g")
+            .attr("class", "y axis");
+        
+        var yAxisLabel = yAxisG.append("text")
+            .style("text-anchor", "middle")
+            .attr("transform", "translate(-" + 40 + "," + (height / 2) + ") rotate(-90)")
+            .text("Normalized " + yColumn);
+        
+        var colorLegendG = d3_svg_g.append("g")
+            .attr({"class": "color-legend", "transform": "translate(20, 0)"});
+        
+        var xScale = d3.scale.ordinal().rangeBands([0, width], barPadding),
+            yScale = d3.scale.linear().range([height, 0]),
+            colorScale = d3.scale.category10();
+
+        var xAxis = d3.svg.axis().scale(xScale).orient("bottom")
+            .outerTickSize(0);
+        var yAxis = d3.svg.axis().scale(yScale).orient("left")
+            .ticks(5)
+            .tickFormat(d3.format("s"))
+            .outerTickSize(0);
+        
+        var colorLegend = d3.legend.color().scale(colorScale).shapePadding(2).shapeWidth(15).shapeHeight(15)
+            .labelOffset(4);
+        
+        var percentageOfDataConsidered = 0.1;
+        
+        render(percentageOfDataConsidered);
+        
+        $("#comparisonToolBar > button").click(function(event) {
+            
+            $(this).siblings().removeClass("active").end().addClass("active");
+            yColumn = $(this).text();
+            yAxisLabel.text("Normalized " + yColumn);
+            render(percentageOfDataConsidered);
+        });
+        
+        
+        $( "#percentageOfDataConsidered" ).slider({
+            range: "max",
+            min: 5,
+            max: 50,
+            value: 10,
+            slide: function( event, ui ) {
+                $( "#percentageOfDataConsideredValue" ).html("Top<strong> " + ui.value + "%</strong>" + " last<strong> " + ui.value + "%</strong> samples based on quality");
+                render(parseFloat(ui.value) / 100);
+            }
+        });
+        
+        $( "#percentageOfDataConsideredValue" ).html("Top<strong> " + $( "#percentageOfDataConsidered" ).slider("value") + "%</strong>" + " last<strong> " + $( "#percentageOfDataConsidered" ).slider("value") + "%</strong> samples based on quality");
+        
+        // render, will be changed according to the statistics chosen
+        function render(percentageOfDataConsideredValue) {
+            // first of all, get first percentageOfDataConsideredValue and last percentageOfDataConsideredValue instances
+            var sampleInstancesNumber = Math.round(sortedInstances.length * percentageOfDataConsideredValue);
+            var topPercentInstances = [],
+                botPercentInstances = [];
+            
+            for(var i = 0; i <= sampleInstancesNumber; ++i) {
+                topPercentInstances.push(sortedInstances[i]);
+                botPercentInstances.push(sortedInstances[sortedInstances.length - 1 - i]);
+            }
+    //        console.log(topPercentInstances);
+    //        console.log(botPercentInstances);
+
+            // compute statistics of the atrributes of good and bad wines
+            var attrStatis = [];
+
+            var attributes = Object.keys(sortedInstances[0]);
+            var indexOfID = attributes.indexOf("ID");
+            if(indexOfID != -1) {
+                attributes.splice(indexOfID, 1);
+            }
+            var indexOfQuality = attributes.indexOf("quality");
+            if(indexOfQuality != -1) {
+                attributes.splice(indexOfQuality, 1);
+            }
+    //        console.log(attributes);
+            attributes.forEach(function(attribute) {
+                attrStatis.push({
+                    "attribute": attribute,
+                    "quality": "Good white wine",
+                    "mean": d3.mean(topPercentInstances, function(instance){return instance[attribute];}),
+                    "min": d3.min(topPercentInstances, function(instance){return instance[attribute];}),
+                    "max": d3.max(topPercentInstances, function(instance){return instance[attribute];}),
+                    "median": d3.median(topPercentInstances, function(instance){return instance[attribute];}),
+                    "variance": d3.variance(topPercentInstances, function(instance){return instance[attribute];}),
+                    "deviation": d3.deviation(topPercentInstances, function(instance){return instance[attribute];})
+                });
+
+                attrStatis.push({
+                    "attribute": attribute,
+                    "quality": "Bad white wine",
+                    "mean": d3.mean(botPercentInstances, function(instance){return instance[attribute];}),
+                    "min": d3.min(botPercentInstances, function(instance){return instance[attribute];}),
+                    "max": d3.max(botPercentInstances, function(instance){return instance[attribute];}),
+                    "median": d3.median(botPercentInstances, function(instance){return instance[attribute];}),
+                    "variance":d3.variance(botPercentInstances, function(instance){return instance[attribute];}),
+                    "deviation": d3.deviation(botPercentInstances, function(instance){return instance[attribute];})
+                });  
+            });
+            
+            // render the chart
+            var nested = d3.nest().key(function (d){ return d[layerColumn]; }).entries(attrStatis);
+
+            var stack = d3.layout.stack().y(function (d){ return d[yColumn]; }).values(function (d){ return d.values; });
+
+            var layers = stack(nested);
+
+            xScale.domain(layers[0].values.map(function (d){
+                return d[xColumn];
+            }));
+
+            yScale.domain([
+              0,
+              d3.max(layers, function (layer){
+                return d3.max(layer.values, function (d){
+                  return d.y;
+                });
+              })
+            ]);
+
+            colorScale.domain(layers.map(function (layer){
+                return layer.key;
+            }));
+
+            xAxisG.call(xAxis).selectAll("text").attr("dx", "-.8em").attr("dy", "1em").attr("transform", "rotate(-20)");
+            yAxisG.call(yAxis);
+
+            // add tips
+            var tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .offset([-10, 0])
+                .html(function(d) {
+                    var attrStatistics = instancesStatistics[d["attribute"]];
+                    var originalData = (d[yColumn] / 100 * (attrStatistics["max"] - attrStatistics["min"]) + attrStatistics["min"]).toPrecision(4);
+                    return "<strong>" + d["attribute"] + ":</strong> <span>" + originalData + "</span>";
+            });
+
+            d3_svg_g.call(tip);
+
+            var layers = d3_svg_g.selectAll(".layer").data(layers);
+            layers.enter().append("g").attr("class", "layer");
+            layers.exit().remove();
+            layers.style("fill", function (d){
+              return colorScale(d.key);
+            });
+
+            var bars = layers.selectAll("rect").data(function (d){
+              return d.values;
+            });
+            var barWidth = xScale.rangeBand() / colorScale.domain().length;
+            bars.enter().append("rect")
+            bars.exit().remove();
+            bars.attr({
+                "x": function (d, i, j) {return xScale(d[xColumn]) + barWidth * j;},       
+                "y": function (d){ return yScale(d.y); },
+                "width": barWidth,
+                "height": function (d){return height - yScale(d.y);}})
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
+
+            colorLegendG.call(colorLegend);
+        }
+    }    
+    
+    
+    /*
     * scatter render
     * @para container, the div element that is used to contain the scatter chart
     * @para instances, the data set to be rendered
@@ -301,7 +504,11 @@ $(function() { // executed after the HTML content is loaded completely
         
         data["axes"] = [];
         
+        // avoid attribute overlap
+        attributes.sort();
+        
         attributes.forEach(function(attr) {
+            
             data["axes"].push({
                 "axis": [attr],
                 "value": instance[attr] / instancesStatistics[attr]["max"]
@@ -354,7 +561,7 @@ $(function() { // executed after the HTML content is loaded completely
 	}
        
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter
-	var whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", type, function(error, instances) {
+	var whiteWine = d3.csv("/static/dataset/wine/wine_red.csv", type, function(error, instances) {
 		if (error){
 			throw error;
 		}
@@ -416,22 +623,11 @@ $(function() { // executed after the HTML content is loaded completely
         // store as global variable, for window is a global variable
         window.instances = instances;
         
+        
+        // overview render
+        compareTopAndBottom("#compareGoodBadWines", window.normalizedSortedInstances, window.instancesStatistics);
         // scatter render
-        scatterRender("#scatterPlot", window.instances, window.instancesStatistics, false);
-        
-        $( "#percentageOfDataConsidered" ).slider({
-            orientation: "vertical",
-            range: "max",
-            min: 10,
-            max: 100,
-            value: 10,
-            slide: function( event, ui ) {
-                $( "#percentageOfDataConsideredValue" ).val(ui.value + "%");
-                compareGoodBadWines(window.normalizedSortedInstances, parseFloat(ui.value) / 200);
-            }
-        });
-        
-        $( "#percentageOfDataConsideredValue" ).val($( "#percentageOfDataConsidered" ).slider("value") + "%");
+        scatterRender("#scatterPlot", window.instances, window.instancesStatistics, false);        
 	});
 	
     /*
