@@ -20,12 +20,13 @@ $(function() { // executed after the HTML content is loaded completely
 		var attributes = $.map(instances[0], function(value,index){
 			return [index];
 		});
-		var cols = attributes.length; //numbers of columns
+		attributes.pop();
+		var cols = attributes.length; //numbers of columns minus ID
 		var rows = instances.length; //numbers of rows
-		var margin = { top: 100, right: 0, bottom: 100, left: 120 },
-        width = 1060 - margin.left - margin.right,
+		var margin = { top: 100, right: 120, bottom: 100, left: 120 },
+        width = 1200 - margin.left - margin.right,
 		gridSize = Math.floor(width / 12),
-		height = gridSize * rows - margin.top - margin.bottom + 50,
+		height = gridSize * rows - margin.top - margin.bottom + 200,
         legendElementWidth = gridSize*2,
         buckets = 9;
 		var min=[],max=[];
@@ -67,7 +68,7 @@ $(function() { // executed after the HTML content is loaded completely
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 		
 		var xAxisG = g.append("g")
-			.attr("class", "x axis")
+			//.attr("class", "x axis")
 			.attr("transform", "translate(0," + (-50) + ")");
 		var xScale = d3.scale.ordinal().rangeBands([0, width],0.2);
 		
@@ -79,7 +80,7 @@ $(function() { // executed after the HTML content is loaded completely
 		xAxisG
           .call(xAxis)
           .selectAll("text")  
-          .attr("dx", "-.8em")
+          .attr("dx", "-0.8em")
           .attr("dy", "1em")
           .attr("transform", "rotate(-20)" );
 		
@@ -112,21 +113,21 @@ $(function() { // executed after the HTML content is loaded completely
 			.attr("fill", color);
 		
 		var legend = g.selectAll(".legend")
-		.data(color.ticks(6).slice(1).reverse())
+		.data(color.ticks(buckets).slice(1).reverse())
 		.enter().append("g")
 			.attr("class", "legend")
-			.attr("transform", function(d, i) { return "translate(" + (width + 20) + "," + (20 + i * 20) + ")"; });
+			.attr("transform", function(d, i) { return "translate(" + (width + 30) + "," + (30 + i * 30) + ")"; });
 		
 		legend.append("rect")
-			.attr("width", 20)
-			.attr("height", 20)
+			.attr("width", 30)
+			.attr("height", 30)
 			.style("fill", color);
 
 		legend.append("text")
-			.attr("x", 26)
-			.attr("y", 10)
+			.attr("x", 36)
+			.attr("y", 15)
 			.attr("dy", ".35em")
-      .text(String);
+			.text(String);
 	}
     
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter
