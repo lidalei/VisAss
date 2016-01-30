@@ -97,7 +97,7 @@ $(function() { // executed after the HTML content is loaded completely
 		
 		var color = d3.scale.linear()
 				.domain([0, 1])
-				.range(["#ffa6a6", "#ff0000"]);
+				.range(["#ffe6e6", "#ff0000"]);
 		
 		
 		g.selectAll("rect")
