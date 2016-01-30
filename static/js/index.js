@@ -153,7 +153,7 @@ $(function() { // executed after the HTML content is loaded completely
             attributes.forEach(function(attribute) {
                 attrStatis.push({
                     "attribute": attribute,
-                    "quality": "Good white wine",
+                    "quality": "Top quality " + window.instancesName,
                     "mean": d3.mean(topPercentInstances, function(instance){return instance[attribute];}),
                     "min": d3.min(topPercentInstances, function(instance){return instance[attribute];}),
                     "max": d3.max(topPercentInstances, function(instance){return instance[attribute];}),
@@ -164,7 +164,7 @@ $(function() { // executed after the HTML content is loaded completely
 
                 attrStatis.push({
                     "attribute": attribute,
-                    "quality": "Bad white wine",
+                    "quality": "Low quality " + window.instancesName,
                     "mean": d3.mean(botPercentInstances, function(instance){return instance[attribute];}),
                     "min": d3.min(botPercentInstances, function(instance){return instance[attribute];}),
                     "max": d3.max(botPercentInstances, function(instance){return instance[attribute];}),
@@ -517,55 +517,33 @@ $(function() { // executed after the HTML content is loaded completely
         
         RadarChart.defaultConfig.radius = 5;
         RadarChart.defaultConfig.w = $(radarContainer).find("svg").width();
-        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height();
+        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height() + 20;
         RadarChart.draw(radarContainer, [data]);
         
         
-//        //Legend titles
-//		var LegendOptions = ['White wine instance ' + instanceID];
-//        
-//        // add legend
-//        var colorscale = d3.scale.category10();
-////        
-////		var svg = d3.select(container)
-////			.selectAll('svg')
-////			.append('svg')
-////			.attr({"width": w+500,"height": h});
-////		
-////		//Create the title for the legend
-////		var text = svg.append("text")
-////			.attr({"class": "title",'transform': 'translate(90,0)',"x": w - 100,"y": 20,"font-size": "16px","fill": "#404040"})
-////			.text('The attributes of the wine "whitewine0001"');
-////				
-////		//Initiate Legend	
-////		var legend = svg.append("g")
-////			.attr({"class": "legend","height": 100,"width": 200,'transform':'translate(90,20)'})
-////			;
-////			//Create colour squares
-////			legend.selectAll('rect')
-////			  .data(LegendOptions)
-////			  .enter()
-////			  .append("rect")
-////			  .attr({"x": w - 65,"y":function(d, i){ return i * 20+10;},"width":10,"height":10})
-////			  .style("fill", function(d, i){ return colorscale(i);})
-////			  ;
-////			//Create text next to squares
-////			legend.selectAll('text')
-////			  .data(LegendOptions)
-////			  .enter()
-////			  .append("text")
-////			  .attr({"x": w - 52, "y": function(d, i){ return i * 20 + 9+10;},"font-size": "11px","fill": "#737373"})
-////			  .text(function(d) { return d; })
-////			  ;	
+        // Legend titles
+        
+        var radar_svg = d3.select(radarContainer).select("svg"),
+			svgWidth = parseFloat(radar_svg.style("width").replace("px", "")),
+			svgHeight = parseFloat(radar_svg.style("height").replace("px", ""));
+        radar_svg.append("text")
+            .attr("x", (svgWidth / 2))
+            .attr("y", svgHeight)
+            .attr("text-anchor", "middle")
+            .style("font-size", "1em")
+            .style("color", "#000")
+            .text(window.instancesName + ' instance ' + (instanceID + 1));
 	
 	}
        
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter
-	var whiteWine = d3.csv("/static/dataset/wine/wine_red.csv", type, function(error, instances) {
+	var whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", type, function(error, instances) {
 		if (error){
 			throw error;
 		}
-                
+
+        window.instancesName = "white wine";
+        
         // compute statistics of the dataset
         var instancesStatistics = {};
         var attributes = Object.keys(instances[0]);
