@@ -106,8 +106,8 @@ $(function() { // executed after the HTML content is loaded completely
 			.append("rect")
 			.attr("x", function(d,i) { return Math.floor(i / rows) * gridSize; })
 			.attr("y", function(d,i) { return i % rows * gridSize; })
-			.attr("rx", 4)
-            .attr("ry", 4)
+			.attr("rx", 0)
+            .attr("ry", 0)
 			.attr("width", gridSize)
 			.attr("height", gridSize)
 			.attr("fill", color);
