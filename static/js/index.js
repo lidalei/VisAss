@@ -82,6 +82,7 @@ $(function() { // executed after the HTML content is loaded completely
             .attr("transform", "translate(-" + 40 + "," + (height / 2) + ") rotate(-90)")
             .text("Normalized " + yColumn);
         
+        // color legend to different kinds
         var colorLegendG = d3_svg_g.append("g")
             .attr({"class": "color-legend", "transform": "translate(20, 0)"});
         
@@ -482,7 +483,7 @@ $(function() { // executed after the HTML content is loaded completely
 
                 // Enter handles added data only
                 svg_g_circles.enter().append("circle")
-                    .attr({"fill": function(instance){return "#1f77b4"/*zColorScale(instance[zAttr])*/;}, "fill": "none", "fill-opacity": 0.6, "stroke": "rgba(31, 119, 180, 0.8)", "stroke-width": "2px", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 4, "id": function(instance){return "whiteWine" + instance["ID"];}})
+                    .attr({"fill": function(instance){return "#1f77b4"/*zColorScale(instance[zAttr])*/;}, "fill": "#ffffff", "fill-opacity": 0.6, "stroke": "rgba(31, 119, 180, 0.8)", "stroke-width": "2px", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 4, "id": function(instance){return "whiteWine" + instance["ID"];}})
                     .on("mouseover", function() {
                     var circle = d3.select(this).attr({"stroke": "rgba(255, 127, 14, 0.8)", "r": 6});
                     var instanceID = parseFloat(circle.attr("id").replace("whiteWine", ""));
