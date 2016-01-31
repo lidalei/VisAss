@@ -249,11 +249,13 @@ $(function() { // executed after the HTML content is loaded completely
     /*
     * scatter render
     * @para container, the div element that is used to contain the scatter chart
-    * @para instances, the data set to be rendered
-    * @para instancesStatistics, the statistics of the data set
+    * @para instances, original data set
+    * @para statistics of the original data set
+    * @para sortedInstancesByQuality, the sorted data set to be rendered
     */
     
-    function scatterRender(container, instances, instancesStatistics) {
+    function scatterRender(container, instances, instancesStatistics, sortedInstancesByQuality) {
+        
         // first, define the canvas, define margin and padding
         var svg = d3.select(container).select("svg"),
             svg_paras = {
@@ -279,7 +281,8 @@ $(function() { // executed after the HTML content is loaded completely
             "yAttr": "quality",
             "zAttr": "quality",
             "numberOfBins": 10,
-            "zColorScale": d3.scale.category10()
+            "zColorScale": d3.scale.category10(),
+            "qualityInterval": [instancesStatistics["quality"]["min"], instancesStatistics["quality"]["max"]]
             /*
             var rMin = 2, rMax = 20; // "r" stands for radius
             var zLinearScale = d3.scale.linear()
@@ -301,7 +304,45 @@ $(function() { // executed after the HTML content is loaded completely
         * @para isNumberOFBinsChanged. true, the number of bins changed, false, no.
         */
         function render(isNumberOFBinsChanged) {
-
+            
+            // filter the sorted data set based on the quality interval
+            var filteredSortedInstances = undefined;
+            
+            var minmalQuality = axisesParas["qualityInterval"][0],
+                maximalQuality = axisesParas["qualityInterval"][1];
+            
+            var startIndex = 0,
+                endIndex = sortedInstancesByQuality.length - 1;
+            
+            // sortedInstancesByQuality, descending by quality
+            for(var i = sortedInstancesByQuality.length - 1; i >= 0; --i) {
+                if(sortedInstancesByQuality[i]["quality"] >= minmalQuality) {
+                    endIndex = i + 1;
+                    break;
+                }
+            }
+            
+            for(var i = 0; i < sortedInstancesByQuality.length; ++i) {
+                if(sortedInstancesByQuality[i]["quality"] <= maximalQuality) {
+                    startIndex = i;
+                    break;
+                }
+            }
+            
+            
+            console.log(startIndex + " " + endIndex);
+            
+            if(endIndex == -1) {
+                filteredSortedInstances = sortedInstancesByQuality.slice(startIndex);
+            }
+            else {
+                filteredSortedInstances = sortedInstancesByQuality.slice(startIndex, endIndex);
+            }
+            
+            var filteredSortedInstancesStatistics = computeStatistics(filteredSortedInstances);
+            
+            console.log(filteredSortedInstancesStatistics);
+            
             var width = svg_g_paras.width,
                 height = svg_g_paras.height,
                 xAttr = axisesParas["xAttr"],
@@ -312,8 +353,8 @@ $(function() { // executed after the HTML content is loaded completely
 
             if(xAttr == yAttr) {    // histogram
                 var numberOfBins = axisesParas["numberOfBins"],
-                    maxAttrValue = instancesStatistics[xAttr]["max"],
-                    minAttrValue = instancesStatistics[xAttr]["min"],
+                    maxAttrValue = filteredSortedInstancesStatistics[xAttr]["max"],
+                    minAttrValue = filteredSortedInstancesStatistics[xAttr]["min"],
                     intervalWidth = (maxAttrValue - minAttrValue) / numberOfBins;
                 
                 // add title
@@ -330,8 +371,8 @@ $(function() { // executed after the HTML content is loaded completely
 
                 // compute the histogram
                 var histIndex = 0;
-                for(var i = 0; i < instances.length; ++i) {
-                    histIndex = Math.floor((instances[i][xAttr] - minAttrValue) / intervalWidth);
+                for(var i = 0; i < filteredSortedInstances.length; ++i) {
+                    histIndex = Math.floor((filteredSortedInstances[i][xAttr] - minAttrValue) / intervalWidth);
                     if(histIndex == numberOfBins) {
                         --histIndex;
                     }
@@ -418,11 +459,11 @@ $(function() { // executed after the HTML content is loaded completely
                     xAxis = d3.svg.axis().scale(xLinearScale).orient("bottom"),
                     yAxis = d3.svg.axis().scale(yLinearScale).orient("left");
 
-                xLinearScale.domain([instancesStatistics[xAttr]["min"], instancesStatistics[xAttr]["max"]]);
-                yLinearScale.domain([instancesStatistics[yAttr]["min"], instancesStatistics[yAttr]["max"]]);	
+                xLinearScale.domain([filteredSortedInstancesStatistics[xAttr]["min"], filteredSortedInstancesStatistics[xAttr]["max"]]);
+                yLinearScale.domain([filteredSortedInstancesStatistics[yAttr]["min"], filteredSortedInstancesStatistics[yAttr]["max"]]);	
 
                 // Update...
-                var svg_g_circles = svg_g.selectAll("circle").data(instances);
+                var svg_g_circles = svg_g.selectAll("circle").data(filteredSortedInstances);
 
                 // draw axises
                 // set axis, give it a class so it can be used to select only xaxis labels  below
@@ -507,16 +548,13 @@ $(function() { // executed after the HTML content is loaded completely
             values: [instancesStatistics["quality"]["min"], instancesStatistics["quality"]["max"]],
             slide: function( event, ui ) {
                 $( "#qualityInterval" ).html("Quality: <strong>" + ui.values[0] + "-" + ui.values[1] + "</strong>");
-                
-                axisesParas["numberOfBins"] = ui.value;
-                // render only when xAttr = yAttr
-                if(axisesParas.xAttr == axisesParas.yAttr) {
-                    render(true);
-                }
+                // TODO
+                axisesParas["qualityInterval"] = ui.values;
+                render(false);
             }
         });
         
-        $("#qualityInterval").html("Quality: <strong>" + ui.values[0] + "-" + $("#qualityIntervalSlider").slider("values", 0) + "-" + $("#qualityIntervalSlider").slider("values", 1) + "</strong>");
+        $("#qualityInterval").html("Quality: <strong>" + $("#qualityIntervalSlider").slider("values", 0) + "-" + $("#qualityIntervalSlider").slider("values", 1) + "</strong>");
         
         // end qualit interval control
         
@@ -584,7 +622,7 @@ $(function() { // executed after the HTML content is loaded completely
 //            .text(window.instancesName + ' instance ' + (instanceID + 1));
         $("#instanceRadarChartTitle").text(window.instancesName + ' instance ' + (instanceID + 1));
 	}
-       
+    
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter
 	var whiteWine = d3.csv("/static/dataset/wine/wine_white.csv", type, function(error, instances) {
 		if (error){
@@ -592,23 +630,14 @@ $(function() { // executed after the HTML content is loaded completely
 		}
 
         window.instancesName = "white wine";
+            
+        var attributes = Object.keys(instances[0]);
         
         // compute statistics of the dataset
-        var instancesStatistics = {};
-        var attributes = Object.keys(instances[0]);
-        attributes.forEach(function(attribute) {
-            instancesStatistics[attribute] = {
-                "mean": d3.mean(instances, function(instance){return instance[attribute];}),
-                "min": d3.min(instances, function(instance){return instance[attribute];}),
-                "max": d3.max(instances, function(instance){return instance[attribute];}),
-                "median": d3.median(instances, function(instance){return instance[attribute];}),
-                "variance": d3.variance(instances, function(instance){return instance[attribute];}),
-                "deviation": d3.deviation(instances, function(instance){return instance[attribute];})
-            };
-        });
+        var instancesStatistics = computeStatistics(instances);
         
         window.instancesStatistics = instancesStatistics;
-        
+                
         // add ID attribute for each instance, after statistics computation to avoid compute ID's
         instances.every(function(instance, index) {
             instances[index].ID = index;
@@ -638,7 +667,7 @@ $(function() { // executed after the HTML content is loaded completely
         
         normalizedSortedInstances.every(function(instance, index) {
             attributes.forEach(function(attribute) {
-                normalizedSortedInstances[index][attribute] = 100 * (normalizedSortedInstances[index][attribute] - instancesStatistics[attribute]["min"]) / (instancesStatistics[attribute]["max"] - instancesStatistics[attribute]["min"] + 1e-6);
+                normalizedSortedInstances[index][attribute] = 100 * (instance[attribute] - instancesStatistics[attribute]["min"]) / (instancesStatistics[attribute]["max"] - instancesStatistics[attribute]["min"] + 1e-6);
             });
             
             return true;            
@@ -650,11 +679,11 @@ $(function() { // executed after the HTML content is loaded completely
         // store as global variable, for window is a global variable
         window.instances = instances;
         
-        
         // overview render
         compareTopAndBottom("#compareGoodBadWines", window.normalizedSortedInstances, window.instancesStatistics);
         // scatter render
-        scatterRender("#scatterPlot", window.instances, window.instancesStatistics, false);        
+        scatterRender("#scatterPlot", window.instances, window.instancesStatistics, window.sortedInstancesByQuality);
+        
 	});
 	
     /*
@@ -667,6 +696,31 @@ $(function() { // executed after the HTML content is loaded completely
 		}
 		return instance;
 	}
+    
+    // compute statistics of a data set
+    function computeStatistics(instances) {
+        
+        var attributes = Object.keys(instances[0]),
+            instancesStatistics = {};
+        
+        var indexOfID = attributes.indexOf("ID");
+        if(indexOfID != -1) {
+            attributes.splice(indexOfID, 1);
+        }
+        
+        attributes.forEach(function(attribute) {
+            instancesStatistics[attribute] = {
+                "mean": d3.mean(instances, function(instance){return instance[attribute];}),
+                "min": d3.min(instances, function(instance){return instance[attribute];}),
+                "max": d3.max(instances, function(instance){return instance[attribute];}),
+                "median": d3.median(instances, function(instance){return instance[attribute];}),
+                "variance": d3.variance(instances, function(instance){return instance[attribute];}),
+                "deviation": d3.deviation(instances, function(instance){return instance[attribute];})
+            };
+        });
+        
+        return instancesStatistics;
+    }
     
     // clone object deep, from http://stackoverflow.com/questions/9399369/how-to-copy-or-duplicate-an-array-of-arrays
     function clone (existingArray) {
