@@ -78,7 +78,7 @@ $(function() { // executed after the HTML content is loaded completely
             .attr("class", "y axis");
         
         var yAxisLabel = yAxisG.append("text")
-            .style("text-anchor", "middle")
+            .style({"text-anchor": "middle", "font-size": "2em"})
             .attr("transform", "translate(-" + 40 + "," + (height / 2) + ") rotate(-90)")
             .text("Normalized " + yColumn);
         
@@ -206,7 +206,6 @@ $(function() { // executed after the HTML content is loaded completely
 //            yAxisG.call(yAxis);
             
             // add title
-            // TODO
             d3_svg_g_title.text(["Statistics of top and last " + Math.round(percentageOfDataConsideredValue * 100) + "% quality " + window.instancesName]).style("text-anchor", "middle").attr({"x": innerWidth / 2, "y": 0, "font-size": "2em", "class": "svg-title"});
 
             // add tips
@@ -315,7 +314,14 @@ $(function() { // executed after the HTML content is loaded completely
                 var numberOfBins = axisesParas["numberOfBins"],
                     maxAttrValue = instancesStatistics[xAttr]["max"],
                     minAttrValue = instancesStatistics[xAttr]["min"],
-                    intervalWidth = (maxAttrValue - minAttrValue) / numberOfBins;            
+                    intervalWidth = (maxAttrValue - minAttrValue) / numberOfBins;
+                
+                // add title
+                svg_g.append("text").style("text-anchor", "middle")
+                    .attr({"x": width / 2, "y": -10, "class": "svg-title"})
+                    .text("Histogram of " + xAttr)
+                    .style("font-size", "2em");
+                
                 // initialiaze the histogram
                 var histogram = [];
                 for(var i = 0; i < numberOfBins; ++i) {
@@ -372,7 +378,7 @@ $(function() { // executed after the HTML content is loaded completely
                 // change the index of intervals to interval itself
                 var binIntervalArray =[];
                 for(var i = 0; i < numberOfBins; ++i) {
-                    binIntervalArray.push((minAttrValue + i * intervalWidth).toPrecision(4) + "-");
+                    binIntervalArray.push((minAttrValue + i * intervalWidth).toPrecision(2) + "-" + (minAttrValue + (i+1) * intervalWidth).toPrecision(2));
                 }
                 xOrdinalScale.domain(binIntervalArray);
 
@@ -389,18 +395,24 @@ $(function() { // executed after the HTML content is loaded completely
                     .attr({"transform": "translate(0," + height + ")", "class": "x axis"});
                 var yAxisG = svg_g.append("g").attr({"class": "y axis"});		
                 var xAxisLabel = xAxisG.append("text")
-                    .style("text-anchor", "middle")
-                    .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset, "class": "label"})
+                    .style({"text-anchor": "middle", "font-size": "2em"})
+                    .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset})
                     .text(xAttr);
                 var yAxisLabel = yAxisG.append("text")
-                    .style("text-anchor", "middle")
-                    .attr("transform", "translate(-" + axisLabelsParas.yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)")
+                    .style({"text-anchor": "middle", "font-size": "2em"})
+                    .attr({"transform": "translate(-" + axisLabelsParas.yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)"})
                     .text("frequency");
                 // draw axis
                 xAxisG.call(xAxis);
                 yAxisG.call(yAxis);            
             }
             else if(!isNumberOFBinsChanged) {  // scatter, yAttr = f(xAttr)
+                
+                // add title
+                svg_g.append("text").style({"text-anchor": "middle", "font-size": "2em"})
+                    .attr({"x": width / 2, "y": -10, "class": "svg-title"})
+                    .text("Scatter between " + yAttr + " and " + xAttr);
+                
                 var xLinearScale = d3.scale.linear().range([0, width]),
                     yLinearScale = d3.scale.linear().range([height, 0]),
                     xAxis = d3.svg.axis().scale(xLinearScale).orient("bottom"),
@@ -418,10 +430,10 @@ $(function() { // executed after the HTML content is loaded completely
                     .attr({"transform": "translate(0," + height + ")", "class": "x axis"});
                 var yAxisG = svg_g.append("g").attr({"class": "y axis"});		
                 var xAxisLabel = xAxisG.append("text")
-                    .style("text-anchor", "middle")
+                    .style({"text-anchor": "middle", "font-size": "2em"})
                     .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset}).text(xAttr);
                 var yAxisLabel = yAxisG.append("text")
-                    .style("text-anchor", "middle")
+                    .style({"text-anchor": "middle", "font-size": "2em"})
                     .attr("transform", "translate(-" + axisLabelsParas.yAxisLabelOffset + "," + (height / 2) + ") rotate(-90)").text(yAttr);
                 // draw axis
                 xAxisG.call(xAxis);
@@ -429,15 +441,14 @@ $(function() { // executed after the HTML content is loaded completely
 
                 // Enter handles added data only
                 svg_g_circles.enter().append("circle")
-                    .attr({"fill": function(instance){return "#74c476"/*zColorScale(instance[zAttr])*/;}, "fill-opacity": 0.8, "stroke": "none", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 3, "id": function(instance){return "whiteWine" + instance["ID"];}})
+                    .attr({"fill": function(instance){return "#1f77b4"/*zColorScale(instance[zAttr])*/;}, "fill": "none", "fill-opacity": 0.6, "stroke": "rgba(31, 119, 180, 0.8)", "stroke-width": "2px", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 4, "id": function(instance){return "whiteWine" + instance["ID"];}})
                     .on("mouseover", function() {
-                    // TODO
-                    var circle = d3.select(this);
+                    var circle = d3.select(this).attr({"stroke": "rgba(255, 127, 14, 0.8)", "r": 6});
                     var instanceID = parseFloat(circle.attr("id").replace("whiteWine", ""));
                     radarRender("#instanceRadarChart", instances, instancesStatistics, instanceID);
                 })
                 .on("mouseout", function() {
-                    ;
+                    var circle = d3.select(this).attr({"stroke": "rgba(31, 119, 180, 0.8)", "r": 4});
                 });
 
                 // Exit…
@@ -467,19 +478,50 @@ $(function() { // executed after the HTML content is loaded completely
             }
         });
         
-        $("#changeNumberOfBinsBtn").click(function() {
-            var numberOfBins = Math.round(parseFloat($(this).parent().prev().val()));
-            if(isNaN(numberOfBins)) {
-                ;
+        // begin change number of bins
+        $( "#numberOfBinsSlider" ).slider({
+            range: "max",
+            min: 5,
+            max: 20,
+            value: 10,
+            slide: function( event, ui ) {
+                $( "#numberOfBins" ).html("Number of bins: <strong>" + ui.value + "</strong>");
+                
+                axisesParas["numberOfBins"] = ui.value;
+                // render only when xAttr = yAttr
+                if(axisesParas.xAttr == axisesParas.yAttr) {
+                    render(true);
+                }
             }
-            else {
-                axisesParas["numberOfBins"] = numberOfBins;
+        });
+        
+        $( "#numberOfBins" ).html("Number of bins: <strong>" + $( "#numberOfBinsSlider" ).slider("value") + "</strong>");
+        // end change number of bins
+        
+        
+        // begin quality interval control
+        $("#qualityIntervalSlider").slider({
+            range: true,
+            min: instancesStatistics["quality"]["min"],
+            max: instancesStatistics["quality"]["max"],
+            values: [instancesStatistics["quality"]["min"], instancesStatistics["quality"]["max"]],
+            slide: function( event, ui ) {
+                $( "#qualityInterval" ).html("Quality: <strong>" + ui.values[0] + "-" + ui.values[1] + "</strong>");
+                
+                axisesParas["numberOfBins"] = ui.value;
+                // render only when xAttr = yAttr
+                if(axisesParas.xAttr == axisesParas.yAttr) {
+                    render(true);
+                }
             }
-            // render only when xAttr = yAttr
-            if(axisesParas.xAttr == axisesParas.yAttr) {
-                render(true);
-            }
-        });        
+        });
+        
+        $("#qualityInterval").html("Quality: <strong>" + ui.values[0] + "-" + $("#qualityIntervalSlider").slider("values", 0) + "-" + $("#qualityIntervalSlider").slider("values", 1) + "</strong>");
+        
+        // end qualit interval control
+        
+        
+        
         
     }
     
@@ -519,29 +561,28 @@ $(function() { // executed after the HTML content is loaded completely
             
             data["axes"].push({
                 "axis": [attr],
-                "value": instance[attr] / instancesStatistics[attr]["max"]
+                "value": instance[attr] / instancesStatistics[attr]["max"],
+                "originalValue": instance[attr]
             });
         });
         
         RadarChart.defaultConfig.radius = 5;
         RadarChart.defaultConfig.w = $(radarContainer).find("svg").width();
-        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height() + 40;
+        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height();
         RadarChart.draw(radarContainer, [data]);
         
         
         // Legend titles
-        
-        var radar_svg = d3.select(radarContainer).select("svg"),
-			svgWidth = parseFloat(radar_svg.style("width").replace("px", "")),
-			svgHeight = parseFloat(radar_svg.style("height").replace("px", ""));
-        radar_svg.append("text")
-            .attr("x", (svgWidth / 2))
-            .attr("y", svgHeight)
-            .attr("text-anchor", "middle")
-            .style("font-size", "1em")
-            .style("color", "#000")
-            .text(window.instancesName + ' instance ' + (instanceID + 1));
-	
+//        var radar_svg = d3.select(radarContainer).select("svg"),
+//			svgWidth = parseFloat(radar_svg.style("width").replace("px", "")),
+//			svgHeight = parseFloat(radar_svg.style("height").replace("px", ""));
+//        radar_svg.append("text")
+//            .attr("x", (svgWidth / 2))
+//            .attr("y", svgHeight)
+//            .attr(    "text-anchor", "middle")
+//            .style("font-size", "1.5em")
+//            .text(window.instancesName + ' instance ' + (instanceID + 1));
+        $("#instanceRadarChartTitle").text(window.instancesName + ' instance ' + (instanceID + 1));
 	}
        
     // read CSV files, may use d3.dsv(delimiter, mimeType) to configure delimiter

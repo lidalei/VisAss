@@ -100,8 +100,7 @@ Writing the visualization code here
 
 /* axis */
 .axis text {
-    font-family: 'Poiret One', cursive;
-    font-size: "2em";
+    font: 1em sans-serif;
 }
 .axis .label {
     font-size: "2em";
