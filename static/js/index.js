@@ -417,7 +417,7 @@ $(function() { // executed after the HTML content is loaded completely
                 // change the index of intervals to interval itself
                 var binIntervalArray =[];
                 for(var i = 0; i < numberOfBins; ++i) {
-                    binIntervalArray.push((minAttrValue + i * intervalWidth).toPrecision(2) + "-" + (minAttrValue + (i+1) * intervalWidth).toPrecision(2));
+                    binIntervalArray.push("[" + (minAttrValue + i * intervalWidth).toPrecision(2) + "-" + (minAttrValue + (i+1) * intervalWidth).toPrecision(2) + ")");
                 }
                 xOrdinalScale.domain(binIntervalArray);
 
@@ -455,7 +455,7 @@ $(function() { // executed after the HTML content is loaded completely
                     svg_title.text("Scatter plot: " + zAttr + "= f(" + xAttr + ", " + yAttr + ")");
                 }
                 else {
-                    svg_title.text("Scatter plot: " + yAttr + "= f(" + xAttr + ")");
+                    svg_title.text("Scatter plot between " + yAttr + " and " + xAttr);
                 }
                 
                 var xLinearScale = d3.scale.linear().range([0, width]),
