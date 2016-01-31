@@ -453,7 +453,7 @@ $(function() { // executed after the HTML content is loaded completely
                 // add title
                 svg_g.append("text").style({"text-anchor": "middle", "font-size": "2em"})
                     .attr({"x": width / 2, "y": -10, "class": "svg-title"})
-                    .text("Scatter between " + yAttr + " and " + xAttr);
+                    .text("Scatter plot between " + yAttr + " and " + xAttr);
                 
                 var xLinearScale = d3.scale.linear().range([0, width]),
                     yLinearScale = d3.scale.linear().range([height, 0]),
