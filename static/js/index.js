@@ -283,13 +283,9 @@ $(function() { // executed after the HTML content is loaded completely
             "zAttr": "quality",
             "numberOfBins": 10,
             "zColorScale": d3.scale.category10(),
-            "qualityInterval": [instancesStatistics["quality"]["min"], instancesStatistics["quality"]["max"]]
-            /*
-            var rMin = 2, rMax = 20; // "r" stands for radius
-            var zLinearScale = d3.scale.linear()
-                .domain(d3.extent(instances, function(instance){return instance["quality"];}))
-                .range([rMin, rMax]);
-            */
+            "qualityInterval": [instancesStatistics["quality"]["min"], instancesStatistics["quality"]["max"]],
+            // when z-attr changed, change the domain
+            "isZActivated": false
         },
             axisLabelsParas = { // define axis labels
                 // xAxisLabelText: xAttr,
@@ -330,8 +326,7 @@ $(function() { // executed after the HTML content is loaded completely
                 }
             }
             
-            
-            console.log(startIndex + " " + endIndex);
+//            console.log(startIndex + " " + endIndex);
             
             if(endIndex == -1) {
                 filteredSortedInstances = sortedInstancesByQuality.slice(startIndex);
@@ -342,12 +337,14 @@ $(function() { // executed after the HTML content is loaded completely
             
             var filteredSortedInstancesStatistics = computeStatistics(filteredSortedInstances);
             
-            console.log(filteredSortedInstancesStatistics);
+//            console.log(filteredSortedInstancesStatistics);
             
             var width = svg_g_paras.width,
                 height = svg_g_paras.height,
                 xAttr = axisesParas["xAttr"],
-                yAttr = axisesParas["yAttr"];
+                yAttr = axisesParas["yAttr"],
+                zAttr = axisesParas["zAttr"],
+                isZActivated = axisesParas["isZActivated"];
 
             // clear previous scatter
             svg_g.selectAll("*").remove();
@@ -448,7 +445,8 @@ $(function() { // executed after the HTML content is loaded completely
                 xAxisG.call(xAxis);
                 yAxisG.call(yAxis);            
             }
-            else if(!isNumberOFBinsChanged) {  // scatter, yAttr = f(xAttr)
+            else if(!isNumberOFBinsChanged) {
+                // scatter, yAttr = f(xAttr), or zAttr = f(xAttr, yAttr) when isZActivated is true
                 
                 // add title
                 svg_g.append("text").style({"text-anchor": "middle", "font-size": "2em"})
@@ -463,6 +461,11 @@ $(function() { // executed after the HTML content is loaded completely
                 xLinearScale.domain([filteredSortedInstancesStatistics[xAttr]["min"], filteredSortedInstancesStatistics[xAttr]["max"]]);
                 yLinearScale.domain([filteredSortedInstancesStatistics[yAttr]["min"], filteredSortedInstancesStatistics[yAttr]["max"]]);	
 
+                var zLinearScale = undefined;
+                if(isZActivated) {
+                    zLinearScale = d3.scale.linear().range([2, 10]).domain([filteredSortedInstancesStatistics[zAttr]["min"], filteredSortedInstancesStatistics[zAttr]["max"]]);
+                }
+                
                 // Update...
                 var svg_g_circles = svg_g.selectAll("circle").data(filteredSortedInstances);
 
@@ -470,7 +473,7 @@ $(function() { // executed after the HTML content is loaded completely
                 // set axis, give it a class so it can be used to select only xaxis labels  below
                 var xAxisG = svg_g.append("g")
                     .attr({"transform": "translate(0," + height + ")", "class": "x axis"});
-                var yAxisG = svg_g.append("g").attr({"class": "y axis"});		
+                var yAxisG = svg_g.append("g").attr({"class": "y axis"});	
                 var xAxisLabel = xAxisG.append("text")
                     .style({"text-anchor": "middle", "font-size": "2em"})
                     .attr({"x": width / 2, "y": axisLabelsParas.xAxisLabelOffset}).text(xAttr);
@@ -483,14 +486,14 @@ $(function() { // executed after the HTML content is loaded completely
 
                 // Enter handles added data only
                 svg_g_circles.enter().append("circle")
-                    .attr({"fill": function(instance){return "#1f77b4"/*zColorScale(instance[zAttr])*/;}, "fill": "#ffffff", "fill-opacity": 0.6, "stroke": "rgba(31, 119, 180, 0.8)", "stroke-width": "2px", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": 4, "id": function(instance){return "whiteWine" + instance["ID"];}})
+                    .attr({"fill": function(instance){return "#1f77b4"/*zColorScale(instance[zAttr])*/;}, "fill": "#ffffff", "fill-opacity": 0.6, "stroke": "rgba(31, 119, 180, 0.8)", "stroke-width": "2px", "cx": function(instance){return xLinearScale(instance[xAttr]);}, "cy": function(instance){return yLinearScale(instance[yAttr]);}, "r": function(instance){return isZActivated ? zLinearScale(instance[zAttr]) : 4;}, "id": function(instance){return "whiteWine" + instance["ID"];}})
                     .on("mouseover", function() {
-                    var circle = d3.select(this).attr({"stroke": "rgba(255, 127, 14, 0.8)", "r": 6});
+                    var circle = d3.select(this).attr({"stroke": "rgba(255, 127, 14, 0.8)"});
                     var instanceID = parseFloat(circle.attr("id").replace("whiteWine", ""));
                     radarRender("#instanceRadarChart", instances, instancesStatistics, instanceID);
                 })
                 .on("mouseout", function() {
-                    var circle = d3.select(this).attr({"stroke": "rgba(31, 119, 180, 0.8)", "r": 4});
+                    var circle = d3.select(this).attr({"stroke": "rgba(31, 119, 180, 0.8)", "r": function(instance){return isZActivated ? zLinearScale(instance[zAttr]) : 4;}});
                 });
 
                 // Exit…
@@ -504,21 +507,63 @@ $(function() { // executed after the HTML content is loaded completely
         $("#xLabelBtns > button").click(function() {
             var newXAttr =  $(this).attr("title");
             if(newXAttr != axisesParas.xAttr) {
-                axisesParas.xAttr = newXAttr;
+                
+                
+                axisesParas.xAttr = newXAttr;                
                 $(this).addClass("active").siblings().removeClass("active");
+                
                 render(false);
             }
+            
+            $("#zLabelBtns > button").prop("disabled", false);
+            $("#zLabelBtns > button").filter(":first").prop("disabled", true);
+            $("#zLabelBtns > button[title='" + axisesParas.xAttr + "']").prop("disabled", true);
+            $("#zLabelBtns > button[title='" + axisesParas.yAttr + "']").prop("disabled", true);
         });
         
         $("#yLabelBtns > button").click(function() {
             var newYAttr = $(this).attr("title");
             if(newYAttr != axisesParas.yAttr) {
-                $(this).addClass("active").siblings().removeClass("active");
                 
                 axisesParas.yAttr = newYAttr;
+                
+                $(this).addClass("active").siblings().removeClass("active");
+                                
                 render(false);   
             }
+            
+            $("#zLabelBtns > button").prop("disabled", false);
+            $("#zLabelBtns > button").filter(":first").prop("disabled", true);
+            $("#zLabelBtns > button[title='" + axisesParas.xAttr + "']").prop("disabled", true);
+            $("#zLabelBtns > button[title='" + axisesParas.yAttr + "']").prop("disabled", true);
+            
         });
+        
+        // TODO
+        $("#zLabelBtns > button").click(function() {
+            if(axisesParas["isZActivated"]) {   // z-label is activated
+                var newZAttr = $(this).attr("title");
+                if(newZAttr != axisesParas["zAttr"]) {
+                    $(this).addClass("active").siblings().removeClass("active");
+                    axisesParas.zAttr = newZAttr;
+                }
+                else {  // deactivate
+                    $("#zLabelBtns > button").removeClass("active");
+                    axisesParas["isZActivated"] = false;
+                }
+            }
+            else {
+                axisesParas["zAttr"] = $(this).attr("title");
+                axisesParas["isZActivated"] = true;
+                
+                $(this).addClass("active").siblings().removeClass("active");
+            }
+            
+            $("#zLabelBtns > button").filter(":first").prop("disabled", true);
+            
+            render(false);
+        });
+        
         
         // begin change number of bins
         $( "#numberOfBinsSlider" ).slider({
