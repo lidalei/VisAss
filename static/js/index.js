@@ -449,9 +449,14 @@ $(function() { // executed after the HTML content is loaded completely
                 // scatter, yAttr = f(xAttr), or zAttr = f(xAttr, yAttr) when isZActivated is true
                 
                 // add title
-                svg_g.append("text").style({"text-anchor": "middle", "font-size": "2em"})
-                    .attr({"x": width / 2, "y": -10, "class": "svg-title"})
-                    .text("Scatter plot between " + yAttr + " and " + xAttr);
+                var svg_title = svg_g.append("text").style({"text-anchor": "middle", "font-size": "2em"})
+                    .attr({"x": width / 2, "y": -10, "class": "svg-title"});
+                if(isZActivated) {
+                    svg_title.text("Scatter plot: " + zAttr + "= f(" + xAttr + ", " + yAttr + ")");
+                }
+                else {
+                    svg_title.text("Scatter plot: " + yAttr + "= f(" + xAttr + ")");
+                }
                 
                 var xLinearScale = d3.scale.linear().range([0, width]),
                     yLinearScale = d3.scale.linear().range([height, 0]),
