@@ -61,7 +61,9 @@ $(function() { // executed after the HTML content is loaded completely
         d3_svg.append("g");
         
 		// set visible area, i.e., the container of visualized charts
-		var d3_svg_g = d3_svg.select("g").attr({"transform": "translate(" + (margin.left + padding.left) + "," + (margin.top + padding.top) + ")"});        
+		var d3_svg_g = d3_svg.select("g").attr({"transform": "translate(" + (margin.left + padding.left) + "," + (margin.top + padding.top) + ")"});
+        // title
+        var d3_svg_g_title = d3_svg_g.append("text").attr("class", "svg-title");
         
         var xColumn = "attribute",
             yColumn = "median",
@@ -145,10 +147,10 @@ $(function() { // executed after the HTML content is loaded completely
             if(indexOfID != -1) {
                 attributes.splice(indexOfID, 1);
             }
-            var indexOfQuality = attributes.indexOf("quality");
-            if(indexOfQuality != -1) {
-                attributes.splice(indexOfQuality, 1);
-            }
+//            var indexOfQuality = attributes.indexOf("quality");
+//            if(indexOfQuality != -1) {
+//                attributes.splice(indexOfQuality, 1);
+//            }
     //        console.log(attributes);
             attributes.forEach(function(attribute) {
                 attrStatis.push({
@@ -199,7 +201,13 @@ $(function() { // executed after the HTML content is loaded completely
             }));
 
             xAxisG.call(xAxis).selectAll("text").attr("dx", "-.8em").attr("dy", "1em").attr("transform", "rotate(-20)");
-            yAxisG.call(yAxis);
+            
+            // remove yAxis
+//            yAxisG.call(yAxis);
+            
+            // add title
+            // TODO
+            d3_svg_g_title.text(["Statistics of top and last " + Math.round(percentageOfDataConsideredValue * 100) + "% quality " + window.instancesName]).style("text-anchor", "middle").attr({"x": innerWidth / 2, "y": 0, "font-size": "2em", "class": "svg-title"});
 
             // add tips
             var tip = d3.tip()
@@ -517,7 +525,7 @@ $(function() { // executed after the HTML content is loaded completely
         
         RadarChart.defaultConfig.radius = 5;
         RadarChart.defaultConfig.w = $(radarContainer).find("svg").width();
-        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height() + 20;
+        RadarChart.defaultConfig.h = $(radarContainer).find("svg").height() + 40;
         RadarChart.draw(radarContainer, [data]);
         
         
