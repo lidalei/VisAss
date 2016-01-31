@@ -13,6 +13,10 @@ def home():
 def heatmap():
     return render_template('heat_map.html')
 
+@app.route('/parallel-coordinates')
+def parallel_coordinates():
+    return render_template('parallel_coordinates.html')
+
 @app.route('/getArticlesByAuthor/<author_name>')
 def get_articles_by_author(author_name = 'Xiaoou Tang'):
     nearest_author = "Dalei Li"
@@ -20,4 +24,4 @@ def get_articles_by_author(author_name = 'Xiaoou Tang'):
     return render_template('articles.html', author_name = nearest_author, articles = Markup(articles_html))
 
 if __name__ == '__main__':
-    app.run(port = 5000, debug = True)
+    app.run(port = 5000)
